@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam 游戏大数据分析平台</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>🎮 Steam 游戏大数据分析平台</h1>
+        <nav>
+            <a href="/">首页仪表盘</a>
+            <a href="/dashboard/trend">市场趋势</a>
+            <a href="/dashboard/pricing">定价评价</a>
+            <a href="/dashboard/genres">类型标签</a>
+            <a href="/dashboard/developers">开发商生态</a>
+            <a href="/dashboard/realtime">实时数据</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="overview">
+            <h2>📊 数据概览</h2>
+            <div class="card-container">
+                <div class="card" onclick="location.href='/dashboard/trend'">
+                    <h3>📈 市场趋势分析</h3>
+                    <p>游戏发布趋势 · 拥有量变化 · 生命周期</p>
+                </div>
+                <div class="card" onclick="location.href='/dashboard/pricing'">
+                    <h3>💰 定价与评价</h3>
+                    <p>价格vs评分 · 免费vs付费 · 高性价比游戏</p>
+                </div>
+                <div class="card" onclick="location.href='/dashboard/genres'">
+                    <h3>🏷️ 类型标签挖掘</h3>
+                    <p>类型分布 · 热门标签 · 标签共现</p>
+                </div>
+                <div class="card" onclick="location.href='/dashboard/developers'">
+                    <h3>🏢 开发商生态</h3>
+                    <p>市场份额 · 集中度HHI · 跨平台分析</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="realtime">
+            <h2>⚡ 实时数据仪表盘（加分项）</h2>
+            <div class="dashboard-grid">
+                <div class="chart-box" id="chart-rt-games">
+                    <!-- 实时新游戏上架趋势 -->
+                </div>
+                <div class="chart-box" id="chart-rt-price">
+                    <!-- 实时价格分布 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>2026年第6学期 Spark 项目 | Steam Games Dataset (115k+ games, 390MB)</p>
+    </footer>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
