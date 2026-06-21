@@ -51,6 +51,12 @@ object Config {
   /** 模拟数据源端口 */
   val STREAMING_SOURCE_PORT: Int = 9999
 
+  /** Kafka 集群地址 */
+  val KAFKA_BOOTSTRAP_SERVERS: String = "niit-master:9091,niit-master:9092,niit-master:9093"
+
+  /** Kafka Topic */
+  val KAFKA_TOPIC: String = "steam-game-events"
+
   // ==================== 数据库配置（分析结果存储） ====================
 
   /** JDBC URL */

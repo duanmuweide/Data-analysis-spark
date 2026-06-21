@@ -26,6 +26,10 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-jackson" % "4.0.6",
   // 模板引擎 (用于动态页面渲染)
   "org.thymeleaf" % "thymeleaf" % "3.1.2.RELEASE",
+  // MySQL Connector (分析结果持久化)
+  "mysql" % "mysql-connector-java" % "8.0.33",
+  // Spark SQL Kafka (实时流处理)
+  "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion % "provided",
   // 测试
   "org.scalatest" %% "scalatest" % "3.2.17" % "test",
   "org.scalacheck" %% "scalacheck" % "1.17.0" % "test"
