@@ -16,16 +16,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
   // Spark MLlib (机器学习 - FP-Growth 关联规则 / K-Means聚类等)
   "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
-  // Spark Excel 读取器 (Steam数据为 .xlsx 格式)
-  "com.crealytics" %% "spark-excel" % "3.5.0_0.20.4",
-  // Web 服务框架 (用于结果展示的Web应用)
-  "com.typesafe.akka" %% "akka-http" % "10.2.10",
-  "com.typesafe.akka" %% "akka-actor" % "2.6.20",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.20",
   // JSON 处理
   "org.json4s" %% "json4s-jackson" % "4.0.6",
-  // 模板引擎 (用于动态页面渲染)
-  "org.thymeleaf" % "thymeleaf" % "3.1.2.RELEASE",
   // MySQL Connector (分析结果持久化)
   "mysql" % "mysql-connector-java" % "8.0.33",
   // Spark SQL Kafka (实时流处理)
@@ -35,8 +27,11 @@ libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.17.0" % "test"
 )
 
-// 打包时排除 provided 依赖 (Spark集群已有)
-assembly / assemblyOption := (assembly / assemblyOption).value.copy(includeScala = false)
+// 打包配置
+assembly / assemblyMergeStrategy := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
 
 // 主类入口
 Compile / mainClass := Some("com.spark.project.Main")

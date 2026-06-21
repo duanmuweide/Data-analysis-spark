@@ -26,11 +26,11 @@ object Config {
   /** 数据根目录（HDFS 路径，集群提交时使用） */
   val DATA_ROOT: String = "/data/member1"
 
-  /** Steam 游戏主数据文件（Excel格式，390MB，115290 行） */
-  val STEAM_DATA_FILE: String = s"$DATA_ROOT/games.csv"
+  /** Steam 游戏主数据文件（CSV格式，390MB，115290 行） */
+  val STEAM_DATA_FILE: String = s"$DATA_ROOT/games_real.csv"
 
   /** Steam 游戏样例数据（14行，开发调试用） */
-  val STEAM_SAMPLE_FILE: String = s"$DATA_ROOT/games-example.csv"
+  val STEAM_SAMPLE_FILE: String = s"$DATA_ROOT/games-example-real.csv"
 
   // ==================== Spark 配置 ====================
 
