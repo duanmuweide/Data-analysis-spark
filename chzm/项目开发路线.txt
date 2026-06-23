@@ -1,0 +1,9 @@
+离线链路：
+原始数据 → HDFS → Spark on YARN → MySQL → 后端技术 → ECharts
+
+实时链路：
+历史数据模拟器 → Kafka → Spark Structured Streaming on YARN
+          → MySQL实时结果表 → 后端技术 → ECharts定时刷新
+
+1、Spark(scala2.12)+Yarn+Hdfs+kafka+mysql，把项目扔到三台虚拟机上的分布式集群上运行，运行结果放到虚拟机的mysql上。
+2、把虚拟机的mysql中运行的表导出到租的服务器上，然后进行web的可视化展示。
