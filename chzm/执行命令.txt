@@ -1,0 +1,206 @@
+一台虚拟机伪分布式执行离线分析，并写入个人电脑 MySQL
+
+当前目标：
+
+虚拟机 master-pc 上运行 HDFS、YARN、Spark。
+Windows 个人电脑运行 MySQL。
+虚拟机已经能 ping 通 Windows 的 192.168.211.1。
+Spark 任务通过 JDBC 写入 Windows MySQL：192.168.211.1:3306。
+
+
+一、Windows MySQL 初始化
+
+在 Windows 电脑上导入 SQL 文件：
+
+PowerShell 执行：
+
+Get-Content D:\NIIT_Project\Data-analysis-spark\chzm\ecommerce_analysis\scripts\mysql_init.sql | mysql -u root -p
+
+或者在 MySQL 客户端中执行：
+
+source D:/NIIT_Project/Data-analysis-spark/chzm/ecommerce_analysis/scripts/mysql_init.sql;
+
+初始化后检查：
+
+SHOW DATABASES;
+USE spark_ecommerce;
+SHOW TABLES;
+
+需要看到这些表：
+
+ads_sales_time_trend
+ads_category_sales_rank
+ads_user_value_level
+ads_category_association_rules
+rt_category_window_sales
+
+
+二、确认 Windows MySQL 允许虚拟机访问
+
+Windows MySQL 中应存在远程用户：
+
+CREATE USER IF NOT EXISTS 'spark'@'%' IDENTIFIED BY 'spark123456';
+GRANT ALL PRIVILEGES ON spark_ecommerce.* TO 'spark'@'%';
+FLUSH PRIVILEGES;
+
+虚拟机上测试 Windows MySQL 端口：
+
+ping 192.168.211.1
+
+如果有 nc：
+
+nc -vz 192.168.211.1 3306
+
+如果没有 nc，可以用 telnet：
+
+telnet 192.168.211.1 3306
+
+如果 3306 不通，优先检查：
+
+Windows 防火墙是否放行 3306。
+MySQL 是否监听 0.0.0.0 或 192.168.211.1。
+MySQL 用户是否允许 spark@'%' 访问。
+
+
+三、上传离线 CSV 到 HDFS
+
+只上传 4 个离线输入文件：
+
+users.csv
+products.csv
+orders.csv
+order_items.csv
+
+order_events.jsonl 是实时 Kafka 用的，离线阶段不用上传。
+
+在虚拟机 master-pc 上执行：
+
+hdfs dfs -mkdir -p /user/czm/ecommerce/raw
+
+hdfs dfs -put -f users.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f products.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f orders.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f order_items.csv /user/czm/ecommerce/raw/
+
+hdfs dfs -ls /user/czm/ecommerce/raw
+
+检查结果中应看到：
+
+/user/czm/ecommerce/raw/users.csv
+/user/czm/ecommerce/raw/products.csv
+/user/czm/ecommerce/raw/orders.csv
+/user/czm/ecommerce/raw/order_items.csv
+
+
+四、上传 JAR 到虚拟机
+
+建议虚拟机目录：
+
+/opt/czm/ecommerce_analysis
+
+放入：
+
+ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+如果 JAR 名称不同，下面命令中的 JAR 文件名要替换成实际文件名。
+
+
+五、先执行 dry-run
+
+dry-run 不写 MySQL，只验证 Spark 能读 HDFS、能完成 4 个分析。
+
+spark-submit \
+  --class com.niit.spark.ecommerce.OfflineJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 1 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=4 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --input /user/czm/ecommerce/raw \
+  --dry-run
+
+dry-run 成功标准：
+
+终端能打印 4 张结果表样例。
+没有 No paid or completed orders found。
+没有 HDFS path not found。
+没有 Spark/Scala 版本冲突报错。
+
+
+六、正式执行离线分析并写入 Windows MySQL
+
+spark-submit \
+  --class com.niit.spark.ecommerce.OfflineJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 1 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=4 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --input /user/czm/ecommerce/raw \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-user spark \
+  --jdbc-password spark123456
+
+
+七、Windows MySQL 检查离线结果
+
+USE spark_ecommerce;
+
+SELECT COUNT(*) FROM ads_sales_time_trend;
+SELECT COUNT(*) FROM ads_category_sales_rank;
+SELECT COUNT(*) FROM ads_user_value_level;
+SELECT COUNT(*) FROM ads_category_association_rules;
+
+抽查样例：
+
+SELECT * FROM ads_sales_time_trend ORDER BY stat_date, stat_hour LIMIT 10;
+
+SELECT * FROM ads_category_sales_rank ORDER BY stat_date, category_rank LIMIT 10;
+
+SELECT * FROM ads_user_value_level ORDER BY total_score DESC LIMIT 10;
+
+SELECT * FROM ads_category_association_rules ORDER BY lift DESC LIMIT 10;
+
+
+八、离线部分完成标准
+
+满足下面条件，离线部分才算完成：
+
+1. HDFS 中 4 个 CSV 文件存在。
+2. spark-submit 离线任务执行成功。
+3. Windows MySQL 中 4 张 ADS 表都有数据。
+4. 每张 ADS 表能查出样例结果。
+5. 保留关键截图：HDFS 文件列表、spark-submit 成功日志、YARN 成功页面、MySQL count 查询结果、MySQL 样例查询结果。
+
+注意：
+
+表有数据只是跑通。
+答辩时还要能解释 4 个分析点分别是什么类型：
+
+ads_sales_time_trend：时间序列统计。
+ads_category_sales_rank：多维聚合 + TopN 排名。
+ads_user_value_level：RFM 用户价值分层。
+ads_category_association_rules：品类关联规则。
+
+
+三台虚拟机真分布命令，代码不用修改：
+spark-submit \
+  --class com.niit.spark.ecommerce.OfflineJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=6 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --input /user/czm/ecommerce/raw \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-user spark \
+  --jdbc-password spark123456
