@@ -7,7 +7,7 @@ Default input:
   ../data/raw/order_events.jsonl
 
 Example:
-  python kafka_order_producer.py --bootstrap-server centos8:9092 --topic czm_order_events --speed 10
+  python kafka_order_producer.py --bootstrap-server master-pc:9092 --topic czm_order_events --speed 10
 
 Dependency on the machine that runs this script:
   pip install kafka-python
@@ -25,7 +25,7 @@ from typing import Dict, Iterator, Optional
 
 
 DEFAULT_INPUT = Path(__file__).resolve().parents[1] / "data" / "raw" / "order_events.jsonl"
-DEFAULT_BOOTSTRAP_SERVER = "centos8:9092"
+DEFAULT_BOOTSTRAP_SERVER = "master-pc:9092"
 DEFAULT_TOPIC = "czm_order_events"
 REQUIRED_FIELDS = {
     "order_id",
