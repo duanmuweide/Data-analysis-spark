@@ -1,0 +1,377 @@
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+26/06/22 00:36:51 INFO SparkContext: Running Spark version 2.4.6
+26/06/22 00:36:51 INFO SparkContext: Submitted application: Write2DB
+26/06/22 00:36:51 INFO SecurityManager: Changing view acls to: master
+26/06/22 00:36:51 INFO SecurityManager: Changing modify acls to: master
+26/06/22 00:36:51 INFO SecurityManager: Changing view acls groups to:
+26/06/22 00:36:51 INFO SecurityManager: Changing modify acls groups to:
+26/06/22 00:36:51 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(master); groups with view permissions: Set(); users  with modify permissions: Set(master); groups with modify permissions: Set()
+26/06/22 00:36:51 INFO Utils: Successfully started service 'sparkDriver' on port 41913.
+26/06/22 00:36:51 INFO SparkEnv: Registering MapOutputTracker
+26/06/22 00:36:51 INFO SparkEnv: Registering BlockManagerMaster
+26/06/22 00:36:51 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+26/06/22 00:36:51 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+26/06/22 00:36:51 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-10c833d2-fda9-42a3-9675-d42dfb4f41a0
+26/06/22 00:36:51 INFO MemoryStore: MemoryStore started with capacity 1048.8 MB
+26/06/22 00:36:51 INFO SparkEnv: Registering OutputCommitCoordinator
+26/06/22 00:36:51 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+26/06/22 00:36:51 INFO SparkUI: Bound SparkUI to 0.0.0.0, and started at http://master-pc:4040
+26/06/22 00:36:51 INFO SparkContext: Added JAR file:/home/master/sparkproject/SparkSQLCLS01-1.0-SNAPSHOT-jar-with-dependencies.jar at spark://master-pc:41913/jars/SparkSQLCLS01-1.0-SNAPSHOT-jar-with-dependencies.jar with timestamp 1782059811558
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Connecting to master spark://master-pc:7077...
+26/06/22 00:36:51 INFO TransportClientFactory: Successfully created connection to master-pc/192.168.211.128:7077 after 21 ms (0 ms spent in bootstraps)
+26/06/22 00:36:51 INFO StandaloneSchedulerBackend: Connected to Spark cluster with app ID app-20260622003651-0001
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor added: app-20260622003651-0001/0 on worker-20260621235128-192.168.211.127-37511 (192.168.211.127:37511) with 8 core(s)
+26/06/22 00:36:51 INFO StandaloneSchedulerBackend: Granted executor ID app-20260622003651-0001/0 on hostPort 192.168.211.127:37511 with 8 core(s), 512.0 MB RAM
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor added: app-20260622003651-0001/1 on worker-20260621235128-192.168.211.126-43545 (192.168.211.126:43545) with 8 core(s)
+26/06/22 00:36:51 INFO StandaloneSchedulerBackend: Granted executor ID app-20260622003651-0001/1 on hostPort 192.168.211.126:43545 with 8 core(s), 512.0 MB RAM
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor added: app-20260622003651-0001/2 on worker-20260621235127-192.168.211.128-44513 (192.168.211.128:44513) with 8 core(s)
+26/06/22 00:36:51 INFO StandaloneSchedulerBackend: Granted executor ID app-20260622003651-0001/2 on hostPort 192.168.211.128:44513 with 8 core(s), 512.0 MB RAM
+26/06/22 00:36:51 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 37701.
+26/06/22 00:36:51 INFO NettyBlockTransferService: Server created on master-pc:37701
+26/06/22 00:36:51 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor updated: app-20260622003651-0001/2 is now RUNNING
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor updated: app-20260622003651-0001/0 is now RUNNING
+26/06/22 00:36:51 INFO StandaloneAppClient$ClientEndpoint: Executor updated: app-20260622003651-0001/1 is now RUNNING
+26/06/22 00:36:52 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, master-pc, 37701, None)
+26/06/22 00:36:52 INFO BlockManagerMasterEndpoint: Registering block manager master-pc:37701 with 1048.8 MB RAM, BlockManagerId(driver, master-pc, 37701, None)
+26/06/22 00:36:52 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, master-pc, 37701, None)
+26/06/22 00:36:52 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, master-pc, 37701, None)
+26/06/22 00:36:52 INFO StandaloneSchedulerBackend: SchedulerBackend is ready for scheduling beginning after reached minRegisteredResourcesRatio: 0.0
+26/06/22 00:36:52 INFO SharedState: loading hive config file: jar:file:/home/master/sparkproject/SparkSQLCLS01-1.0-SNAPSHOT-jar-with-dependencies.jar!/hive-site.xml
+26/06/22 00:36:52 INFO SharedState: Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir ('file:/home/master/sparkproject/spark-warehouse').
+26/06/22 00:36:52 INFO SharedState: Warehouse path is 'file:/home/master/sparkproject/spark-warehouse'.
+26/06/22 00:36:53 INFO StateStoreCoordinatorRef: Registered StateStoreCoordinator endpoint
+26/06/22 00:36:54 INFO InMemoryFileIndex: It took 127 ms to list leaf files for 1 paths.
+26/06/22 00:36:54 INFO InMemoryFileIndex: It took 1 ms to list leaf files for 1 paths.
+26/06/22 00:36:54 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Registered executor NettyRpcEndpointRef(spark-client://Executor) (192.168.211.126:53844) with ID 1
+26/06/22 00:36:54 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Registered executor NettyRpcEndpointRef(spark-client://Executor) (192.168.211.128:34954) with ID 2
+26/06/22 00:36:55 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Registered executor NettyRpcEndpointRef(spark-client://Executor) (192.168.211.127:53974) with ID 0
+26/06/22 00:36:55 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.211.126:43829 with 1048.8 MB RAM, BlockManagerId(1, 192.168.211.126, 43829, None)
+26/06/22 00:36:55 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.211.128:46211 with 1048.8 MB RAM, BlockManagerId(2, 192.168.211.128, 46211, None)
+26/06/22 00:36:55 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.211.127:36973 with 1048.8 MB RAM, BlockManagerId(0, 192.168.211.127, 36973, None)
+26/06/22 00:36:56 INFO FileSourceStrategy: Pruning directories with:
+26/06/22 00:36:56 INFO FileSourceStrategy: Post-Scan Filters: (length(trim(value#0, None)) > 0)
+26/06/22 00:36:56 INFO FileSourceStrategy: Output Data Schema: struct<value: string>
+26/06/22 00:36:56 INFO FileSourceScanExec: Pushed Filters:
+26/06/22 00:36:56 INFO CodeGenerator: Code generated in 138.308522 ms
+26/06/22 00:36:57 INFO CodeGenerator: Code generated in 16.495704 ms
+26/06/22 00:36:57 INFO MemoryStore: Block broadcast_0 stored as values in memory (estimated size 279.2 KB, free 1048.5 MB)
+26/06/22 00:36:57 INFO MemoryStore: Block broadcast_0_piece0 stored as bytes in memory (estimated size 23.7 KB, free 1048.5 MB)
+26/06/22 00:36:57 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on master-pc:37701 (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:36:57 INFO SparkContext: Created broadcast 0 from csv at Write2Db.scala:33
+26/06/22 00:36:57 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+26/06/22 00:36:57 INFO SparkContext: Starting job: csv at Write2Db.scala:33
+26/06/22 00:36:57 INFO DAGScheduler: Got job 0 (csv at Write2Db.scala:33) with 1 output partitions
+26/06/22 00:36:57 INFO DAGScheduler: Final stage: ResultStage 0 (csv at Write2Db.scala:33)
+26/06/22 00:36:57 INFO DAGScheduler: Parents of final stage: List()
+26/06/22 00:36:57 INFO DAGScheduler: Missing parents: List()
+26/06/22 00:36:57 INFO DAGScheduler: Submitting ResultStage 0 (MapPartitionsRDD[3] at csv at Write2Db.scala:33), which has no missing parents
+26/06/22 00:36:57 INFO MemoryStore: Block broadcast_1 stored as values in memory (estimated size 8.9 KB, free 1048.5 MB)
+26/06/22 00:36:57 INFO MemoryStore: Block broadcast_1_piece0 stored as bytes in memory (estimated size 4.6 KB, free 1048.5 MB)
+26/06/22 00:36:57 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on master-pc:37701 (size: 4.6 KB, free: 1048.8 MB)
+26/06/22 00:36:57 INFO SparkContext: Created broadcast 1 from broadcast at DAGScheduler.scala:1163
+26/06/22 00:36:57 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 0 (MapPartitionsRDD[3] at csv at Write2Db.scala:33) (first 15 tasks are for partitions Vector(0))
+26/06/22 00:36:57 INFO TaskSchedulerImpl: Adding task set 0.0 with 1 tasks
+26/06/22 00:36:57 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0, 192.168.211.127, executor 0, partition 0, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:58 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on 192.168.211.127:36973 (size: 4.6 KB, free: 1048.8 MB)
+26/06/22 00:36:58 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on 192.168.211.127:36973 (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:36:58 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 1479 ms on 192.168.211.127 (executor 0) (1/1)
+26/06/22 00:36:58 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool
+26/06/22 00:36:58 INFO DAGScheduler: ResultStage 0 (csv at Write2Db.scala:33) finished in 1.552 s
+26/06/22 00:36:58 INFO DAGScheduler: Job 0 finished: csv at Write2Db.scala:33, took 1.594567 s
+26/06/22 00:36:59 INFO BlockManagerInfo: Removed broadcast_1_piece0 on master-pc:37701 in memory (size: 4.6 KB, free: 1048.8 MB)
+26/06/22 00:36:59 INFO BlockManagerInfo: Removed broadcast_1_piece0 on 192.168.211.127:36973 in memory (size: 4.6 KB, free: 1048.8 MB)
+26/06/22 00:36:59 INFO FileSourceStrategy: Pruning directories with:
+26/06/22 00:36:59 INFO FileSourceStrategy: Post-Scan Filters:
+26/06/22 00:36:59 INFO FileSourceStrategy: Output Data Schema: struct<value: string>
+26/06/22 00:36:59 INFO FileSourceScanExec: Pushed Filters:
+26/06/22 00:36:59 INFO CodeGenerator: Code generated in 5.795554 ms
+26/06/22 00:36:59 INFO MemoryStore: Block broadcast_2 stored as values in memory (estimated size 279.2 KB, free 1048.2 MB)
+26/06/22 00:36:59 INFO MemoryStore: Block broadcast_2_piece0 stored as bytes in memory (estimated size 23.7 KB, free 1048.2 MB)
+26/06/22 00:36:59 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on master-pc:37701 (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:36:59 INFO SparkContext: Created broadcast 2 from csv at Write2Db.scala:33
+26/06/22 00:36:59 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+26/06/22 00:36:59 INFO SparkContext: Starting job: csv at Write2Db.scala:33
+26/06/22 00:36:59 INFO DAGScheduler: Got job 1 (csv at Write2Db.scala:33) with 17 output partitions
+26/06/22 00:36:59 INFO DAGScheduler: Final stage: ResultStage 1 (csv at Write2Db.scala:33)
+26/06/22 00:36:59 INFO DAGScheduler: Parents of final stage: List()
+26/06/22 00:36:59 INFO DAGScheduler: Missing parents: List()
+26/06/22 00:36:59 INFO DAGScheduler: Submitting ResultStage 1 (MapPartitionsRDD[9] at csv at Write2Db.scala:33), which has no missing parents
+26/06/22 00:36:59 INFO MemoryStore: Block broadcast_3 stored as values in memory (estimated size 14.5 KB, free 1048.2 MB)
+26/06/22 00:36:59 INFO MemoryStore: Block broadcast_3_piece0 stored as bytes in memory (estimated size 8.0 KB, free 1048.2 MB)
+26/06/22 00:36:59 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on master-pc:37701 (size: 8.0 KB, free: 1048.7 MB)
+26/06/22 00:36:59 INFO SparkContext: Created broadcast 3 from broadcast at DAGScheduler.scala:1163
+26/06/22 00:36:59 INFO DAGScheduler: Submitting 17 missing tasks from ResultStage 1 (MapPartitionsRDD[9] at csv at Write2Db.scala:33) (first 15 tasks are for partitions Vector(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14))
+26/06/22 00:36:59 INFO TaskSchedulerImpl: Adding task set 1.0 with 17 tasks
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 0.0 in stage 1.0 (TID 1, 192.168.211.126, executor 1, partition 0, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 1.0 in stage 1.0 (TID 2, 192.168.211.127, executor 0, partition 1, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 2.0 in stage 1.0 (TID 3, 192.168.211.128, executor 2, partition 2, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 3.0 in stage 1.0 (TID 4, 192.168.211.126, executor 1, partition 3, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 4.0 in stage 1.0 (TID 5, 192.168.211.127, executor 0, partition 4, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 5.0 in stage 1.0 (TID 6, 192.168.211.128, executor 2, partition 5, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 6.0 in stage 1.0 (TID 7, 192.168.211.126, executor 1, partition 6, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 7.0 in stage 1.0 (TID 8, 192.168.211.127, executor 0, partition 7, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 8.0 in stage 1.0 (TID 9, 192.168.211.128, executor 2, partition 8, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 9.0 in stage 1.0 (TID 10, 192.168.211.126, executor 1, partition 9, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 10.0 in stage 1.0 (TID 11, 192.168.211.127, executor 0, partition 10, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 11.0 in stage 1.0 (TID 12, 192.168.211.128, executor 2, partition 11, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 12.0 in stage 1.0 (TID 13, 192.168.211.126, executor 1, partition 12, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 13.0 in stage 1.0 (TID 14, 192.168.211.127, executor 0, partition 13, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 14.0 in stage 1.0 (TID 15, 192.168.211.128, executor 2, partition 14, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 15.0 in stage 1.0 (TID 16, 192.168.211.126, executor 1, partition 15, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO TaskSetManager: Starting task 16.0 in stage 1.0 (TID 17, 192.168.211.127, executor 0, partition 16, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:36:59 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on 192.168.211.127:36973 (size: 8.0 KB, free: 1048.8 MB)
+26/06/22 00:37:00 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on 192.168.211.128:46211 (size: 8.0 KB, free: 1048.8 MB)
+26/06/22 00:37:00 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on 192.168.211.126:43829 (size: 8.0 KB, free: 1048.8 MB)
+26/06/22 00:37:00 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on 192.168.211.127:36973 (size: 23.7 KB, free: 1048.7 MB)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 16.0 in stage 1.0 (TID 17) in 2092 ms on 192.168.211.127 (executor 0) (1/17)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 10.0 in stage 1.0 (TID 11) in 2256 ms on 192.168.211.127 (executor 0) (2/17)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 1.0 in stage 1.0 (TID 2) in 2272 ms on 192.168.211.127 (executor 0) (3/17)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 4.0 in stage 1.0 (TID 5) in 2286 ms on 192.168.211.127 (executor 0) (4/17)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 13.0 in stage 1.0 (TID 14) in 2282 ms on 192.168.211.127 (executor 0) (5/17)
+26/06/22 00:37:01 INFO TaskSetManager: Finished task 7.0 in stage 1.0 (TID 8) in 2288 ms on 192.168.211.127 (executor 0) (6/17)
+26/06/22 00:37:01 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on 192.168.211.128:46211 (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:02 INFO TaskSetManager: Finished task 2.0 in stage 1.0 (TID 3) in 3304 ms on 192.168.211.128 (executor 2) (7/17)
+26/06/22 00:37:02 INFO TaskSetManager: Finished task 14.0 in stage 1.0 (TID 15) in 3302 ms on 192.168.211.128 (executor 2) (8/17)
+26/06/22 00:37:02 INFO TaskSetManager: Finished task 11.0 in stage 1.0 (TID 12) in 3306 ms on 192.168.211.128 (executor 2) (9/17)
+26/06/22 00:37:02 INFO TaskSetManager: Finished task 8.0 in stage 1.0 (TID 9) in 3309 ms on 192.168.211.128 (executor 2) (10/17)
+26/06/22 00:37:02 INFO TaskSetManager: Finished task 5.0 in stage 1.0 (TID 6) in 3321 ms on 192.168.211.128 (executor 2) (11/17)
+26/06/22 00:37:02 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on 192.168.211.126:43829 (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 9.0 in stage 1.0 (TID 10) in 4077 ms on 192.168.211.126 (executor 1) (12/17)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 15.0 in stage 1.0 (TID 16) in 4073 ms on 192.168.211.126 (executor 1) (13/17)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 3.0 in stage 1.0 (TID 4) in 4081 ms on 192.168.211.126 (executor 1) (14/17)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 6.0 in stage 1.0 (TID 7) in 4080 ms on 192.168.211.126 (executor 1) (15/17)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 12.0 in stage 1.0 (TID 13) in 4078 ms on 192.168.211.126 (executor 1) (16/17)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 0.0 in stage 1.0 (TID 1) in 4086 ms on 192.168.211.126 (executor 1) (17/17)
+26/06/22 00:37:03 INFO TaskSchedulerImpl: Removed TaskSet 1.0, whose tasks have all completed, from pool
+26/06/22 00:37:03 INFO DAGScheduler: ResultStage 1 (csv at Write2Db.scala:33) finished in 4.101 s
+26/06/22 00:37:03 INFO DAGScheduler: Job 1 finished: csv at Write2Db.scala:33, took 4.103943 s
+========== 原始数据 Schema ==========
+root
+ |-- 市区: string (nullable = true)
+ |-- 小区: string (nullable = true)
+ |-- 户型: string (nullable = true)
+ |-- 朝向: string (nullable = true)
+ |-- 楼层: integer (nullable = true)
+ |-- 装修情况: string (nullable = true)
+ |-- 电梯: string (nullable = true)
+ |-- 面积(㎡): integer (nullable = true)
+ |-- 价格(万元): integer (nullable = true)
+ |-- 年份: integer (nullable = true)
+
+========== 原始数据预览（前10行） ==========
+26/06/22 00:37:03 INFO FileSourceStrategy: Pruning directories with:
+26/06/22 00:37:03 INFO FileSourceStrategy: Post-Scan Filters:
+26/06/22 00:37:03 INFO FileSourceStrategy: Output Data Schema: struct<市区: string, 小区: string, 户型: string, 朝向: string, 楼层: int ... 8 more fields>
+26/06/22 00:37:03 INFO FileSourceScanExec: Pushed Filters:
+26/06/22 00:37:03 INFO CodeGenerator: Code generated in 16.745352 ms
+26/06/22 00:37:03 INFO CodeGenerator: Code generated in 22.877031 ms
+26/06/22 00:37:03 INFO MemoryStore: Block broadcast_4 stored as values in memory (estimated size 279.2 KB, free 1047.9 MB)
+26/06/22 00:37:03 INFO MemoryStore: Block broadcast_4_piece0 stored as bytes in memory (estimated size 23.7 KB, free 1047.9 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Added broadcast_4_piece0 in memory on master-pc:37701 (size: 23.7 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO SparkContext: Created broadcast 4 from show at Write2Db.scala:38
+26/06/22 00:37:03 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+26/06/22 00:37:03 INFO SparkContext: Starting job: show at Write2Db.scala:38
+26/06/22 00:37:03 INFO DAGScheduler: Got job 2 (show at Write2Db.scala:38) with 1 output partitions
+26/06/22 00:37:03 INFO DAGScheduler: Final stage: ResultStage 2 (show at Write2Db.scala:38)
+26/06/22 00:37:03 INFO DAGScheduler: Parents of final stage: List()
+26/06/22 00:37:03 INFO DAGScheduler: Missing parents: List()
+26/06/22 00:37:03 INFO DAGScheduler: Submitting ResultStage 2 (MapPartitionsRDD[13] at show at Write2Db.scala:38), which has no missing parents
+26/06/22 00:37:03 INFO MemoryStore: Block broadcast_5 stored as values in memory (estimated size 14.7 KB, free 1047.9 MB)
+26/06/22 00:37:03 INFO MemoryStore: Block broadcast_5_piece0 stored as bytes in memory (estimated size 7.0 KB, free 1047.9 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Added broadcast_5_piece0 in memory on master-pc:37701 (size: 7.0 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO SparkContext: Created broadcast 5 from broadcast at DAGScheduler.scala:1163
+26/06/22 00:37:03 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 2 (MapPartitionsRDD[13] at show at Write2Db.scala:38) (first 15 tasks are for partitions Vector(0))
+26/06/22 00:37:03 INFO TaskSchedulerImpl: Adding task set 2.0 with 1 tasks
+26/06/22 00:37:03 INFO TaskSetManager: Starting task 0.0 in stage 2.0 (TID 18, 192.168.211.128, executor 2, partition 0, PROCESS_LOCAL, 8266 bytes)
+26/06/22 00:37:03 INFO BlockManagerInfo: Added broadcast_5_piece0 in memory on 192.168.211.128:46211 (size: 7.0 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Added broadcast_4_piece0 in memory on 192.168.211.128:46211 (size: 23.7 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO TaskSetManager: Finished task 0.0 in stage 2.0 (TID 18) in 129 ms on 192.168.211.128 (executor 2) (1/1)
+26/06/22 00:37:03 INFO TaskSchedulerImpl: Removed TaskSet 2.0, whose tasks have all completed, from pool
+26/06/22 00:37:03 INFO DAGScheduler: ResultStage 2 (show at Write2Db.scala:38) finished in 0.138 s
+26/06/22 00:37:03 INFO DAGScheduler: Job 2 finished: show at Write2Db.scala:38, took 0.140466 s
++------+----------+------+----+----+--------+------+--------+----------+----+
+|市区  |小区      |户型  |朝向|楼层|装修情况|电梯  |面积(㎡)|价格(万元)|年份|
++------+----------+------+----+----+--------+------+--------+----------+----+
+|朝阳  |世茂城    |4室2厅|东北|13  |简装    |有电梯|161     |579       |1994|
+|通州  |金融街城  |5室2厅|西南|23  |毛坯    |有电梯|241     |425       |1998|
+|西城  |金融街府  |3室2厅|南  |7   |简装    |有电梯|288     |216       |2004|
+|平谷  |中海公馆  |3室1厅|南  |21  |简装    |有电梯|231     |911       |1979|
+|密云  |阳光府    |2室1厅|东南|11  |其它    |有电梯|200     |267       |2016|
+|顺义  |金地城    |2室1厅|北  |2   |毛坯    |有电梯|60      |194       |1967|
+|门头沟|金地花园  |2室1厅|西  |12  |简装    |无电梯|221     |594       |1983|
+|西城  |华润城    |4室1厅|东北|15  |精装    |无电梯|108     |706       |1961|
+|朝阳  |碧桂园国际|3室1厅|东  |30  |毛坯    |无电梯|167     |783       |1998|
+|房山  |中海苑    |1室0厅|西  |21  |精装    |无电梯|102     |573       |1981|
++------+----------+------+----+----+--------+------+--------+----------+----+
+only showing top 10 rows
+
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 32
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 11
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 71
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 18
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 72
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 86
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 52
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 41
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 24
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 68
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 67
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 78
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 35
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 34
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_3_piece0 on master-pc:37701 in memory (size: 8.0 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_3_piece0 on 192.168.211.127:36973 in memory (size: 8.0 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_3_piece0 on 192.168.211.128:46211 in memory (size: 8.0 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_3_piece0 on 192.168.211.126:43829 in memory (size: 8.0 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 65
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 60
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 45
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 46
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 15
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 37
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 29
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 84
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 38
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 66
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 63
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 22
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 1
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 19
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 42
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 8
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 90
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 3
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 5
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 2
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 57
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 70
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 10
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 23
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 44
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 88
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 31
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 13
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 62
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 20
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 73
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 21
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 17
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 27
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 81
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_4_piece0 on master-pc:37701 in memory (size: 23.7 KB, free: 1048.7 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_4_piece0 on 192.168.211.128:46211 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 85
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 56
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_0_piece0 on master-pc:37701 in memory (size: 23.7 KB, free: 1048.8 MB)
+Mon Jun 22 00:37:03 CST 2026 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_0_piece0 on 192.168.211.127:36973 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 12
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 64
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 4
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 61
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 74
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 26
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 50
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 80
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 82
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 28
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 36
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 43
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 51
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 39
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_2_piece0 on master-pc:37701 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_2_piece0 on 192.168.211.128:46211 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_2_piece0 on 192.168.211.127:36973 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_2_piece0 on 192.168.211.126:43829 in memory (size: 23.7 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 48
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 77
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 59
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 87
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 25
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 0
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 16
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 40
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 53
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 76
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 89
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 69
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 49
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 30
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_5_piece0 on master-pc:37701 in memory (size: 7.0 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO BlockManagerInfo: Removed broadcast_5_piece0 on 192.168.211.128:46211 in memory (size: 7.0 KB, free: 1048.8 MB)
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 79
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 55
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 83
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 6
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 14
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 54
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 9
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 7
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 47
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 33
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 75
+26/06/22 00:37:03 INFO ContextCleaner: Cleaned accumulator 58
+Exception in thread "main" org.apache.spark.sql.AnalysisException: Column "市区" not found in schema Some(StructType(StructField(district,StringType,true), StructField(community,StringType,true), StructField(layout,StringType,true), StructField(orientation,StringType,true), StructField(floor_num,IntegerType,true), StructField(decoration,StringType,true), StructField(elevator,StringType,true), StructField(area,IntegerType,true), StructField(price,IntegerType,true), StructField(build_year,StringType,true)));
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$$anonfun$4$$anonfun$6.apply(JdbcUtils.scala:147)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$$anonfun$4$$anonfun$6.apply(JdbcUtils.scala:147)
+        at scala.Option.getOrElse(Option.scala:121)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$$anonfun$4.apply(JdbcUtils.scala:146)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$$anonfun$4.apply(JdbcUtils.scala:145)
+        at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:234)
+        at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:234)
+        at scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)
+        at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:186)
+        at scala.collection.TraversableLike$class.map(TraversableLike.scala:234)
+        at scala.collection.mutable.ArrayOps$ofRef.map(ArrayOps.scala:186)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$.getInsertStatement(JdbcUtils.scala:145)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils$.saveTable(JdbcUtils.scala:830)
+        at org.apache.spark.sql.execution.datasources.jdbc.JdbcRelationProvider.createRelation(JdbcRelationProvider.scala:68)
+        at org.apache.spark.sql.execution.datasources.SaveIntoDataSourceCommand.run(SaveIntoDataSourceCommand.scala:45)
+        at org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult$lzycompute(commands.scala:70)
+        at org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult(commands.scala:68)
+        at org.apache.spark.sql.execution.command.ExecutedCommandExec.doExecute(commands.scala:86)
+        at org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:131)
+        at org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:127)
+        at org.apache.spark.sql.execution.SparkPlan$$anonfun$executeQuery$1.apply(SparkPlan.scala:155)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.sql.execution.SparkPlan.executeQuery(SparkPlan.scala:152)
+        at org.apache.spark.sql.execution.SparkPlan.execute(SparkPlan.scala:127)
+        at org.apache.spark.sql.execution.QueryExecution.toRdd$lzycompute(QueryExecution.scala:83)
+        at org.apache.spark.sql.execution.QueryExecution.toRdd(QueryExecution.scala:81)
+        at org.apache.spark.sql.DataFrameWriter$$anonfun$runCommand$1.apply(DataFrameWriter.scala:677)
+        at org.apache.spark.sql.DataFrameWriter$$anonfun$runCommand$1.apply(DataFrameWriter.scala:677)
+        at org.apache.spark.sql.execution.SQLExecution$$anonfun$withNewExecutionId$1.apply(SQLExecution.scala:80)
+        at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:127)
+        at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:75)
+        at org.apache.spark.sql.DataFrameWriter.runCommand(DataFrameWriter.scala:677)
+        at org.apache.spark.sql.DataFrameWriter.saveToV1Source(DataFrameWriter.scala:286)
+        at org.apache.spark.sql.DataFrameWriter.save(DataFrameWriter.scala:272)
+        at org.apache.spark.sql.DataFrameWriter.jdbc(DataFrameWriter.scala:516)
+        at com.qdu.jdbc.Write2Db$.main(Write2Db.scala:43)
+        at com.qdu.jdbc.Write2Db.main(Write2Db.scala)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:498)
+        at org.apache.spark.deploy.JavaMainApplication.start(SparkApplication.scala:52)
+        at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:845)
+        at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:161)
+        at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:184)
+        at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:86)
+        at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:920)
+        at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:929)
+        at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+26/06/22 00:37:04 INFO SparkContext: Invoking stop() from shutdown hook
+26/06/22 00:37:04 INFO SparkUI: Stopped Spark web UI at http://master-pc:4040
+26/06/22 00:37:04 INFO StandaloneSchedulerBackend: Shutting down all executors
+26/06/22 00:37:04 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Asking each executor to shut down
+26/06/22 00:37:04 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+26/06/22 00:37:04 INFO MemoryStore: MemoryStore cleared
+26/06/22 00:37:04 INFO BlockManager: BlockManager stopped
+26/06/22 00:37:04 INFO BlockManagerMaster: BlockManagerMaster stopped
+26/06/22 00:37:04 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+26/06/22 00:37:04 INFO SparkContext: Successfully stopped SparkContext
+26/06/22 00:37:04 INFO ShutdownHookManager: Shutdown hook called
+26/06/22 00:37:04 INFO ShutdownHookManager: Deleting directory /tmp/spark-2b87767c-705e-4a46-857e-3f2451c0ed00
+26/06/22 00:37:04 INFO ShutdownHookManager: Deleting directory /tmp/spark-4ba1ac9c-05fe-4890-9b0b-ecd041c73d67

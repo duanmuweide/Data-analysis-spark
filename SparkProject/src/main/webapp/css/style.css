@@ -1,0 +1,166 @@
+/* ============================================================
+   房屋价格分析 Dashboard — 深色主题样式
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: #0f1923;
+    color: #c9d1d9;
+    min-height: 100vh;
+}
+
+/* ====== 顶部导航栏 ====== */
+.header {
+    background: linear-gradient(135deg, #1a2a3a 0%, #0d1b2a 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #58a6ff;
+    letter-spacing: 1px;
+}
+
+.header .subtitle {
+    font-size: 13px;
+    color: #8b949e;
+}
+
+/* ====== 主布局：CSS Grid ====== */
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* 底部实时面板跨两列 */
+.chart-panel.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ====== 图表面板 ====== */
+.chart-panel {
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+}
+
+.chart-panel:hover {
+    border-color: #30363d;
+}
+
+/* 实时面板特殊边框 */
+.chart-panel.realtime {
+    border-color: #238636;
+    box-shadow: 0 0 12px rgba(35, 134, 54, 0.15);
+}
+
+.chart-panel .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid #21262d;
+    background: #0d1117;
+}
+
+.chart-panel .panel-header h2 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #e6edf3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 实时指示器 */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #3fb950;
+    font-weight: normal;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3fb950;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(1.3); }
+}
+
+.chart-panel .badge {
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #1f6feb22;
+    color: #58a6ff;
+    border: 1px solid #1f6feb44;
+}
+
+.chart-panel.realtime .badge {
+    background: #23863622;
+    color: #3fb950;
+    border-color: #23863644;
+}
+
+.chart-container {
+    width: 100%;
+    height: 420px;
+    padding: 8px;
+}
+
+.chart-panel.full-width .chart-container {
+    height: 450px;
+}
+
+/* ====== 底部信息栏 ====== */
+.footer {
+    text-align: center;
+    padding: 16px;
+    color: #484f58;
+    font-size: 12px;
+    border-top: 1px solid #21262d;
+    margin-top: 10px;
+}
+
+.footer .update-time {
+    color: #8b949e;
+}
+
+/* ====== 响应式：小屏幕单列 ====== */
+@media (max-width: 1000px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    .chart-panel.full-width {
+        grid-column: 1;
+    }
+    .chart-container {
+        height: 320px;
+    }
+}
