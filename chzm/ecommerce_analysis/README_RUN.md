@@ -171,7 +171,7 @@ spark-submit \
   --conf spark.sql.shuffle.partitions=6 \
   ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
   --input /user/czm/ecommerce/raw \
-  --jdbc-url "jdbc:mysql://master-pc:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
   --jdbc-user spark \
   --jdbc-password spark123456
 ```
@@ -229,7 +229,7 @@ spark-submit \
   --kafka-bootstrap master-pc:9092 \
   --topic czm_order_events \
   --checkpoint /user/czm/ecommerce/checkpoint/rt_category_window_sales \
-  --jdbc-url "jdbc:mysql://master-pc:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
   --jdbc-user spark \
   --jdbc-password spark123456
 ```

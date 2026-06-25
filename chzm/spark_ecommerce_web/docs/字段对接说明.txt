@@ -1,0 +1,191 @@
+电商 Spark Web 字段对接说明
+
+一、总体说明
+
+Web 项目不读取原始 CSV，也不重新计算指标。
+
+Web 只查询 Spark 写入 MySQL 的结果表：
+
+1. ads_sales_time_trend
+2. ads_category_sales_rank
+3. ads_user_value_level
+4. ads_category_association_rules
+5. rt_category_window_sales
+
+这 5 张表来自：
+
+chzm/ecommerce_analysis/scripts/mysql_init.sql
+chzm/ecommerce_analysis/src/main/scala/com/niit/spark/ecommerce/OfflineJob.scala
+chzm/ecommerce_analysis/src/main/scala/com/niit/spark/ecommerce/StreamingJob.scala
+chzm/ecommerce_analysis/src/main/scala/com/niit/spark/ecommerce/offline/OfflineAnalytics.scala
+
+
+二、ads_sales_time_trend
+
+来源代码：
+OfflineAnalytics.salesTimeTrend(validOrders)
+
+生成逻辑：
+对已支付、已完成订单按 stat_date 和 stat_hour 分组统计。
+
+字段：
+stat_date：统计日期，来自 orders.csv 的 order_time。
+stat_hour：统计小时，来自 orders.csv 的 order_time。
+order_count：订单数，countDistinct(order_id)。
+user_count：下单用户数，countDistinct(user_id)。
+total_amount：订单总金额求和，sum(total_amount)。
+discount_amount：优惠金额求和，sum(discount_amount)。
+pay_amount：实付金额求和，sum(pay_amount)。
+avg_order_amount：平均客单价，avg(pay_amount)。
+update_time：Spark 写入结果时间。
+
+Web 接口：
+/api/sales/trend
+
+Web 展示：
+每日销售额折线图、每日订单数、小时订单高峰柱状图、顶部指标卡。
+
+
+三、ads_category_sales_rank
+
+来源代码：
+OfflineAnalytics.categorySalesRank(validOrders, orderItems, products, topN)
+
+生成逻辑：
+订单明细 order_items.csv 关联 products.csv 获取品类，再关联有效订单，按日期和品类聚合，并使用窗口函数做每日 TopN 排名。
+
+字段：
+stat_date：统计日期。
+category：商品品类。
+order_count：该品类订单数。
+quantity_sum：该品类销售数量。
+amount_sum：该品类销售额。
+avg_item_amount：该品类平均明细金额。
+channel_count：涉及下单渠道数量。
+category_rank：该品类在当天的销售额排名。
+update_time：Spark 写入结果时间。
+
+Web 接口：
+/api/category/top
+
+Web 展示：
+Top10 品类销售额横向柱状图、品类销售排行榜表格。
+
+注意：
+这张表本身是每日 TopN，Web 再按 category 汇总，是为了做整体 Top10 展示。
+
+
+四、ads_user_value_level
+
+来源代码：
+OfflineAnalytics.userValueLevel(validOrders, users)
+
+生成逻辑：
+对有效订单按 user_id 聚合，计算 RFM 指标，再关联 users.csv 获取用户省份、城市和会员等级。
+
+字段：
+user_id：用户 ID。
+province：用户省份，来自 users.csv。
+city：用户城市，来自 users.csv。
+member_level：会员等级，来自 users.csv。
+recency_days：最近消费间隔天数。
+frequency：消费频次。
+monetary：消费总金额。
+r_score：最近消费得分。
+f_score：消费频次得分。
+m_score：消费金额得分。
+total_score：RFM 总分。
+user_level：用户价值等级，包括高价值用户、重点发展用户、一般保持用户、低价值用户。
+update_time：Spark 写入结果时间。
+
+Web 接口：
+/api/user/value-level
+
+Web 展示：
+用户价值层级环形图、会员等级下的用户层级堆叠柱状图。
+
+注意：
+前端不展示所有 user_id 明细，而是展示聚合后的用户层级分布。
+
+
+五、ads_category_association_rules
+
+来源代码：
+OfflineAnalytics.categoryAssociationRules(validOrders, orderItems, products, minSupport, minConfidence)
+
+生成逻辑：
+按订单收集购买过的品类集合，统计品类两两共现，计算支持度、置信度和提升度。
+
+字段：
+antecedent：前项品类。
+consequent：后项品类。
+support：支持度，品类组合出现次数 / 总购物篮数。
+confidence：置信度，同时购买前项和后项的订单数 / 购买前项的订单数。
+lift：提升度，confidence / 后项品类出现概率。
+pair_order_count：前项和后项共同出现的订单数。
+antecedent_order_count：购买前项品类的订单数。
+consequent_order_count：购买后项品类的订单数。
+total_basket_count：总购物篮数量。
+update_time：Spark 写入结果时间。
+
+Web 接口：
+/api/category/association
+
+Web 展示：
+Top10 关联规则表格、品类关系图。
+
+答辩解释：
+support 表示组合出现比例。
+confidence 表示买了前项后再买后项的概率。
+lift 大于 1 表示两个品类存在正向关联。
+
+
+六、rt_category_window_sales
+
+来源代码：
+StreamingJob.scala
+
+生成逻辑：
+从 Kafka 读取订单事件，按 event_ts 做滑动窗口，并按 category 分组统计窗口内订单数和销售额。
+
+字段：
+window_start：窗口开始时间。
+window_end：窗口结束时间。
+category：商品品类。
+order_count：窗口内订单数。
+pay_amount：窗口内实付金额。
+batch_id：Spark micro-batch 批次号。
+update_time：写入 MySQL 的更新时间。
+
+Web 接口：
+/api/realtime/category-window
+
+Web 展示：
+最新窗口品类销售额柱状图、窗口趋势图、最近实时结果表格。
+
+注意：
+StreamingJob 使用 startingOffsets=latest。
+所以要先启动 StreamingJob，再启动 kafka_order_producer.py。
+
+
+七、原始文件作用
+
+users.csv：
+用户维度表，提供 user_id、province、city、member_level 等信息。
+主要用于用户价值分层。
+
+products.csv：
+商品维度表，提供 product_id、category、brand、price、cost。
+主要用于品类销售排行和品类关联规则。
+
+orders.csv：
+订单主表，提供 order_id、user_id、order_time、order_status、total_amount、discount_amount、pay_amount。
+主要用于销售趋势和用户价值分层。
+
+order_items.csv：
+订单明细表，提供 order_id、product_id、category、quantity、amount。
+主要用于品类销售排行和品类关联规则。
+
+order_events.jsonl：
+实时订单事件文件，给 Kafka producer 使用。
+主要用于实时窗口销售统计。

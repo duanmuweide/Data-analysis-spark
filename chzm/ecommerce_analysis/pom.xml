@@ -68,6 +68,7 @@
                     <args>
                         <arg>-deprecation</arg>
                         <arg>-feature</arg>
+                        <arg>-target:jvm-1.8</arg>
                     </args>
                 </configuration>
             </plugin>

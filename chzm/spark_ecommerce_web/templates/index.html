@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>电商 Spark 数据分析可视化平台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Spark + MySQL + Flask + ECharts</p>
+      <h1>电商 Spark 数据分析可视化平台</h1>
+    </div>
+    <div class="status">
+      <span id="health-dot" class="status-dot"></span>
+      <span id="health-text">正在连接 MySQL</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="metrics" aria-label="销售总览指标">
+      <article class="metric">
+        <span>累计实付金额</span>
+        <strong id="metric-pay-amount">--</strong>
+      </article>
+      <article class="metric">
+        <span>累计订单数</span>
+        <strong id="metric-order-count">--</strong>
+      </article>
+      <article class="metric">
+        <span>平均客单价</span>
+        <strong id="metric-avg-order">--</strong>
+      </article>
+      <article class="metric">
+        <span>数据更新时间</span>
+        <strong id="metric-last-update">--</strong>
+      </article>
+    </section>
+
+    <p id="global-message" class="message" hidden></p>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <h2>1. 销售趋势总览</h2>
+          <p>来自 ads_sales_time_trend，按天看销售额、订单数和客单价，按小时看销售高峰。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <h3>每日销售趋势</h3>
+          <div id="sales-daily-chart" class="chart"></div>
+        </article>
+        <article class="panel">
+          <h3>小时订单高峰</h3>
+          <div id="sales-hourly-chart" class="chart"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <h2>2. 品类销售排行</h2>
+          <p>来自 ads_category_sales_rank，展示 Top10 品类销售额、销量和订单数。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <h3>Top10 品类销售额</h3>
+          <div id="category-top-chart" class="chart"></div>
+        </article>
+        <article class="panel">
+          <h3>品类销售排行榜</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>品类</th>
+                  <th>销售额</th>
+                  <th>销量</th>
+                  <th>订单数</th>
+                </tr>
+              </thead>
+              <tbody id="category-top-table"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <h2>3. 用户价值分层</h2>
+          <p>来自 ads_user_value_level，展示 RFM 用户层级分布，不直接展示用户明细。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <h3>用户价值层级占比</h3>
+          <div id="user-level-chart" class="chart"></div>
+        </article>
+        <article class="panel">
+          <h3>会员等级下的用户分布</h3>
+          <div id="member-level-chart" class="chart"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <h2>4. 品类关联规则</h2>
+          <p>来自 ads_category_association_rules，展示经常一起购买的品类组合。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <h3>Top10 关联规则</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>前项</th>
+                  <th>后项</th>
+                  <th>支持度</th>
+                  <th>置信度</th>
+                  <th>提升度</th>
+                </tr>
+              </thead>
+              <tbody id="association-table"></tbody>
+            </table>
+          </div>
+        </article>
+        <article class="panel">
+          <h3>品类关系图</h3>
+          <div id="association-graph" class="chart"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <h2>5. 实时品类窗口销售</h2>
+          <p>来自 rt_category_window_sales，页面会定时查询 MySQL 最新实时结果。</p>
+        </div>
+        <div class="refresh-note">
+          <span>刷新间隔</span>
+          <strong>{{ refresh_seconds }} 秒</strong>
+        </div>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <h3>最新窗口品类销售额</h3>
+          <div id="realtime-category-chart" class="chart"></div>
+        </article>
+        <article class="panel">
+          <h3>实时窗口趋势</h3>
+          <div id="realtime-trend-chart" class="chart"></div>
+        </article>
+      </div>
+      <article class="panel full">
+        <h3>最近实时结果</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>窗口开始</th>
+                <th>窗口结束</th>
+                <th>品类</th>
+                <th>订单数</th>
+                <th>销售额</th>
+                <th>批次</th>
+                <th>更新时间</th>
+              </tr>
+            </thead>
+            <tbody id="realtime-table"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    window.DASHBOARD_CONFIG = {
+      refreshSeconds: {{ refresh_seconds|int }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='vendor/echarts.min.js') }}"></script>
+  <script>
+    if (!window.echarts) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"><\/script>');
+    }
+  </script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
