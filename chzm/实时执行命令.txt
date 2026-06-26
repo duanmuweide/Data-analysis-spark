@@ -1,0 +1,434 @@
+Spark 实时分析执行流程：Kafka -> Structured Streaming -> Windows MySQL
+
+当前实时分析目标：
+
+order_events.jsonl
+  -> kafka_order_producer.py 发送 JSON 到 Kafka topic
+  -> Spark StreamingJob 消费 Kafka
+  -> 按 1 分钟窗口、30 秒滑动统计品类订单数和销售额
+  -> 写入 Windows MySQL 的 rt_category_window_sales 表
+  -> Web 定时查询 rt_category_window_sales 展示实时刷新
+
+
+一、需要放到虚拟机 master-pc 的文件
+
+建议目录：
+
+/opt/czm/ecommerce_analysis
+
+放这些文件：
+
+1. ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar
+2. kafka_order_producer.py
+3. order_events.jsonl
+
+其中：
+
+JAR 是 Spark 实时任务要执行的程序。
+kafka_order_producer.py 是 Kafka 模拟实时订单生产者。
+order_events.jsonl 是实时订单事件源。
+
+order_events.jsonl 不需要放 HDFS。
+它是 Python producer 本地读取后发到 Kafka 的。
+
+
+二、确认 Python 依赖
+
+在虚拟机 master-pc 上执行：
+
+python3 --version
+
+安装 kafka-python：
+
+python3 -m pip install kafka-python
+
+如果下载慢，可以使用国内源：
+
+python3 -m pip install kafka-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+先验证 producer 能读取 JSON，不连接 Kafka：
+
+python3 kafka_order_producer.py \
+  --input order_events.jsonl \
+  --dry-run \
+  --max-records 5
+
+能打印 5 条 JSON 就说明文件和脚本没问题。
+
+
+三、启动 ZooKeeper 和 Kafka
+
+先找到 Kafka 路径：
+
+ls /usr/local | grep kafka
+
+假设 Kafka 路径是：
+
+/usr/local/kafka_2.12-2.5.0
+
+设置环境变量：
+
+export KAFKA_HOME=/usr/local/kafka_2.12-2.5.0
+
+如果你使用独立 ZooKeeper，先启动 ZooKeeper：
+
+zkServer.sh start
+zkServer.sh status
+
+如果 zkServer.sh 不在 PATH 中，先找路径：
+
+find /usr/local -name zkServer.sh
+
+然后用真实路径启动，例如：
+
+/usr/local/zookeeper-3.6.1/bin/zkServer.sh start
+/usr/local/zookeeper-3.6.1/bin/zkServer.sh status
+
+启动 Kafka：
+
+nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/server.properties > kafka.log 2>&1 &
+
+检查进程：
+
+jps
+
+正常情况下应看到类似：
+
+QuorumPeerMain
+Kafka
+
+检查 Kafka 端口：
+
+netstat -tnlp | grep 9092
+
+
+四、创建 Kafka topic
+
+创建 topic：
+
+$KAFKA_HOME/bin/kafka-topics.sh \
+  --bootstrap-server master-pc:9092 \
+  --create \
+  --topic czm_order_events \
+  --partitions 1 \
+  --replication-factor 1
+
+如果提示 topic 已存在，不是问题。
+
+查看 topic：
+
+$KAFKA_HOME/bin/kafka-topics.sh \
+  --bootstrap-server master-pc:9092 \
+  --list
+
+查看 topic 详情：
+
+$KAFKA_HOME/bin/kafka-topics.sh \
+  --bootstrap-server master-pc:9092 \
+  --describe \
+  --topic czm_order_events
+
+
+五、启动 StreamingJob
+
+注意顺序：
+
+必须先启动 StreamingJob，再启动 kafka_order_producer.py。
+
+原因：
+
+代码里 Kafka 读取参数是 startingOffsets=latest。
+这意味着 StreamingJob 只消费启动之后新发到 Kafka 的数据。
+如果你先跑 producer，再跑 StreamingJob，之前发过的消息可能不会被消费。
+
+启动实时 Spark 任务：
+
+spark-submit \
+  --class com.niit.spark.ecommerce.StreamingJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 1 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=4 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --kafka-bootstrap master-pc:9092 \
+  --topic czm_order_events \
+  --checkpoint /user/czm/ecommerce/checkpoint/rt_category_window_sales \
+  --trigger-seconds 10 \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-user spark \
+  --jdbc-password spark123456
+
+这个窗口不要关闭。
+它会一直运行，等待 Kafka 里的订单事件。
+
+
+六、另开窗口启动 producer
+
+另开一个 SSH 终端，进入同一目录：
+
+cd /opt/czm/ecommerce_analysis
+
+测试阶段建议先发 500 条：
+
+python3 kafka_order_producer.py \
+  --input order_events.jsonl \
+  --bootstrap-server master-pc:9092 \
+  --topic czm_order_events \
+  --speed 10 \
+  --max-records 500 \
+  --realtime-clock
+
+说明：
+
+--speed 10 表示每秒发送 10 条。
+--max-records 500 表示发 500 条后自动停止。
+--realtime-clock 表示把 JSON 里的历史 order_time 改成当前发送时间。
+
+这个参数很重要。
+如果不用 --realtime-clock，order_events.jsonl 里的时间是历史随机时间，Spark watermark 可能丢掉大量乱序事件，实时窗口展示会不稳定。
+
+演示阶段如果想持续刷新，可以用：
+
+python3 kafka_order_producer.py \
+  --input order_events.jsonl \
+  --bootstrap-server master-pc:9092 \
+  --topic czm_order_events \
+  --speed 10 \
+  --loop \
+  --realtime-clock
+
+演示时不建议速度太快。
+5 到 20 条每秒足够。
+
+
+七、检查 MySQL 实时表
+
+在 Windows MySQL 中执行：
+
+USE spark_ecommerce;
+
+SELECT
+  window_start,
+  window_end,
+  category,
+  order_count,
+  pay_amount,
+  batch_id,
+  update_time
+FROM rt_category_window_sales
+ORDER BY update_time DESC
+LIMIT 20;
+
+如果 update_time 变化，并且表里有 category、order_count、pay_amount，实时链路就是通的。
+
+
+八、实时任务需要跑多久
+
+不需要全跑完。
+
+order_events.jsonl 可能有几万条。
+如果 --speed 10 全部发完，可能要一个多小时。
+
+测试阶段：
+
+发 300 到 1000 条就足够验证。
+
+推荐：
+
+python3 kafka_order_producer.py \
+  --input order_events.jsonl \
+  --bootstrap-server master-pc:9092 \
+  --topic czm_order_events \
+  --speed 10 \
+  --max-records 500 \
+  --realtime-clock
+
+500 条大约 50 秒。
+StreamingJob 每 10 秒处理一个 batch，通常 20 到 60 秒内 MySQL 就能看到实时结果。
+
+演示阶段：
+
+使用 --loop 持续发送，展示结束后手动停止。
+
+
+九、中途停止程序的方法
+
+停止 producer：
+
+在 producer 终端按 Ctrl + C。
+
+停止 StreamingJob：
+
+在 spark-submit 终端按 Ctrl + C。
+
+如果 Ctrl + C 不生效，查进程：
+
+jps
+
+找到 SparkSubmit 或 ApplicationMaster 相关进程后停止：
+
+kill <pid>
+
+如果任务已经提交到 YARN，也可以查 application：
+
+yarn application -list
+
+停止指定 application：
+
+yarn application -kill <application_id>
+
+停止 Kafka：
+
+$KAFKA_HOME/bin/kafka-server-stop.sh
+
+停止 ZooKeeper：
+
+zkServer.sh stop
+
+
+十、测试后清空实时表，演示时重新跑会不会出问题
+
+可以清空，没问题。
+
+Windows MySQL 执行：
+
+USE spark_ecommerce;
+TRUNCATE TABLE rt_category_window_sales;
+
+实时表没有自增 id。
+主键是：
+
+window_start + window_end + category
+
+所以不存在“id 乱了”的问题。
+
+但是要注意 checkpoint。
+
+StreamingJob 使用 checkpoint：
+
+/user/czm/ecommerce/checkpoint/rt_category_window_sales
+
+如果你只是短暂停止后继续同一批实时流，不删除 checkpoint 也可以。
+
+如果你想演示时从干净状态重新开始，建议同时清理：
+
+1. MySQL 实时表
+2. HDFS checkpoint
+3. Kafka topic 里的旧数据，可选
+
+清理 MySQL：
+
+TRUNCATE TABLE rt_category_window_sales;
+
+清理 checkpoint：
+
+hdfs dfs -rm -r -f /user/czm/ecommerce/checkpoint/rt_category_window_sales
+
+是否必须清 Kafka topic？
+
+不必须。
+因为 StreamingJob 使用 startingOffsets=latest，重新启动后只读新消息。
+只要你先启动 StreamingJob，再启动 producer，就不会消费旧消息。
+
+如果你想彻底清 topic，可以删除重建：
+
+$KAFKA_HOME/bin/kafka-topics.sh \
+  --bootstrap-server master-pc:9092 \
+  --delete \
+  --topic czm_order_events
+
+然后重新创建：
+
+$KAFKA_HOME/bin/kafka-topics.sh \
+  --bootstrap-server master-pc:9092 \
+  --create \
+  --topic czm_order_events \
+  --partitions 1 \
+  --replication-factor 1
+
+注意：
+
+Kafka 删除 topic 需要 server.properties 开启 delete.topic.enable=true。
+如果没开，不要纠结，保留 topic 也可以。
+
+
+十一、Web 请求实时表会不会出问题
+
+正常不会。
+
+Web 查询 rt_category_window_sales 时，需要考虑三种状态：
+
+1. StreamingJob 没启动，表为空。
+   Web 应显示“暂无实时数据”，不要报错。
+
+2. StreamingJob 启动了，但 producer 还没发数据。
+   表可能仍然为空，Web 继续显示空状态。
+
+3. producer 发数据后，表开始刷新。
+   Web 每 3 到 5 秒查询一次即可。
+
+推荐 Web 查询：
+
+SELECT
+  window_start,
+  window_end,
+  category,
+  order_count,
+  pay_amount,
+  update_time
+FROM rt_category_window_sales
+ORDER BY update_time DESC
+LIMIT 20;
+
+前端不应该假设实时表一定有数据。
+如果接口返回空数组，ECharts 显示空图或提示暂无数据即可。
+
+
+十二、演示前推荐完整重置流程
+
+演示前按下面顺序来：
+
+1. 清空 MySQL 实时表
+
+TRUNCATE TABLE rt_category_window_sales;
+
+2. 删除 Streaming checkpoint
+
+hdfs dfs -rm -r -f /user/czm/ecommerce/checkpoint/rt_category_window_sales
+
+3. 确认 Kafka 正常
+
+$KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server master-pc:9092 --list
+
+4. 启动 StreamingJob
+
+先启动 Spark Streaming，等待它运行起来。
+
+5. 启动 producer
+
+python3 kafka_order_producer.py \
+  --input order_events.jsonl \
+  --bootstrap-server master-pc:9092 \
+  --topic czm_order_events \
+  --speed 10 \
+  --loop \
+  --realtime-clock
+
+6. 打开 Web 页面
+
+观察实时图表是否每 3 到 5 秒刷新。
+
+
+十三、最小验证标准
+
+实时部分完成，至少要保留这些证据：
+
+1. Kafka topic czm_order_events 存在。
+2. producer 能持续打印 Sent xxx events。
+3. StreamingJob 没报错，持续运行。
+4. MySQL rt_category_window_sales 表有数据。
+5. update_time 会随 producer 发送持续更新。
+6. Web 页面能查到实时表并刷新。

@@ -20,6 +20,7 @@ import json
 import signal
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterator, Optional
 
@@ -55,6 +56,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--speed", type=float, default=10.0, help="Records per second; use 0 for unlimited")
     parser.add_argument("--max-records", type=int, default=0, help="Stop after N records; 0 means no limit")
     parser.add_argument("--loop", action="store_true", help="Replay the input file repeatedly")
+    parser.add_argument("--realtime-clock", action="store_true", help="Replace order_time with current time when sending")
     parser.add_argument("--dry-run", action="store_true", help="Validate and print records without sending to Kafka")
     return parser.parse_args()
 
@@ -124,6 +126,10 @@ def send_events(args: argparse.Namespace) -> int:
             for event in iter_events(input_path):
                 if STOP_REQUESTED:
                     break
+
+                if args.realtime_clock:
+                    event = dict(event)
+                    event["order_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 key = str(event["order_id"])
                 value = json.dumps(event, ensure_ascii=False, separators=(",", ":"))
