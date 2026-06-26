@@ -164,6 +164,45 @@ spark-submit \
 这个窗口不要关闭。
 它会一直运行，等待 Kafka 里的订单事件。
 
+重要解释：
+
+默认窗口是 1 分钟窗口、30 秒滑动：
+
+--window-duration 1 minute
+--slide-duration 30 seconds
+
+这种滑动窗口是重叠窗口。
+一条订单事件通常会被统计进 2 个窗口。
+所以 producer 发送 500 条事件时，如果你把 rt_category_window_sales 中所有窗口的 order_count 全部相加，结果可能接近 1000。
+这不是 producer 多发了，也不是 MySQL 重复插入，而是滑动窗口的正常统计语义。
+
+如果你希望“发送 500 条，所有窗口合计也接近 500”，就使用不重叠窗口：
+
+--window-duration "1 minute"
+--slide-duration "1 minute"
+
+不重叠窗口启动示例：
+
+spark-submit \
+  --class com.niit.spark.ecommerce.StreamingJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 1 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=4 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --kafka-bootstrap master-pc:9092 \
+  --topic czm_order_events \
+  --checkpoint /user/czm/ecommerce/checkpoint/rt_category_window_sales \
+  --window-duration "1 minute" \
+  --slide-duration "1 minute" \
+  --trigger-seconds 10 \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-user spark \
+  --jdbc-password spark123456
+
 
 六、另开窗口启动 producer
 
