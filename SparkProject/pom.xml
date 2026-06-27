@@ -7,6 +7,7 @@
     <groupId>com.qdu</groupId>
     <artifactId>SparkProject</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -109,20 +110,20 @@
                 <version>2.2</version>
                 <configuration>
                     <port>8080</port>
-                    <path>/SparkSQLCLS01</path>
+                    <path>/SparkProject</path>
                     <uriEncoding>UTF-8</uriEncoding>
                 </configuration>
             </plugin>
 
-            <!-- ====== 打包插件：把依赖的jar也打进去（fat jar） ====== -->
+            <!-- ====== 打包插件：把依赖的jar也打进去（fat jar，类在根目录） ====== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+                    <descriptors>
+                        <descriptor>src/main/assembly/fat-jar.xml</descriptor>
+                    </descriptors>
                 </configuration>
                 <executions>
                     <execution>
