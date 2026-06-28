@@ -8,12 +8,20 @@ import java.util.*;
  *
  * 数据库: spark_steam_games
  * 各分析结果表在 Spark 分析完成后写入
+ *
+ * 表结构:
+ *   - analysis_market_trend        : A1 市场趋势（离线批处理）
+ *   - analysis_pricing_review      : A2 定价与评价（离线批处理）
+ *   - analysis_genre_tags          : A3 类型标签挖掘（离线批处理）
+ *   - analysis_developer_ecosystem : A4 开发商生态（离线批处理）
+ *   - realtime_game_stats          : 实时窗口聚合指标（流处理 → 10秒更新）
+ *   - realtime_genre_counts        : 实时类型分布（流处理 → 10秒更新）
  */
 public class MysqlDao {
 
-    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/spark_steam_games?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String JDBC_URL = "jdbc:mysql://192.168.211.1:3306/spark_steam_games?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "password";
+    private static final String DB_PASSWORD = "root";
 
     static {
         try {
@@ -115,25 +123,69 @@ public class MysqlDao {
 
     public List<Map<String, Object>> getDeveloperEcosystem() {
         return queryList(
-            "SELECT developer, game_count, total_owners, market_share_pct, " +
-            "avg_price, platform_diversity, market_hhi, market_structure " +
-            "FROM analysis_developer_ecosystem ORDER BY game_count DESC LIMIT 30"
+            "SELECT * FROM analysis_developer_ecosystem ORDER BY game_count DESC LIMIT 30"
         );
     }
 
     public Map<String, Object> getDeveloperSummary() {
         Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("hhi", querySingleDouble(
-            "SELECT MAX(market_hhi) FROM analysis_developer_ecosystem"));
         summary.put("marketStructure", querySingleString(
-            "SELECT MAX(market_structure) FROM analysis_developer_ecosystem"));
+            "SELECT market_structure FROM analysis_developer_ecosystem ORDER BY game_count DESC LIMIT 1"));
         summary.put("topDev", querySingleString(
             "SELECT developer FROM analysis_developer_ecosystem ORDER BY game_count DESC LIMIT 1"));
         summary.put("topDevCount", querySingleLong(
             "SELECT MAX(game_count) FROM analysis_developer_ecosystem"));
         summary.put("totalDevs", querySingleLong(
             "SELECT COUNT(*) FROM analysis_developer_ecosystem"));
+        summary.put("hhi", querySingleDouble(
+            "SELECT MAX(market_hhi) FROM analysis_developer_ecosystem"));
         return summary;
+    }
+
+    // ============================================================
+    // 实时数据（Spark Streaming → MySQL）
+    // ============================================================
+
+    /**
+     * 获取最新窗口实时统计指标
+     *
+     * @return Map 包含 window_start, window_end, new_games_count,
+     *         avg_price, avg_owners, avg_positive_rate, updated_at
+     */
+    public Map<String, Object> getRealtimeStats() {
+        List<Map<String, Object>> rows = queryList(
+            "SELECT window_start, window_end, new_games_count, " +
+            "avg_price, avg_owners, avg_positive_rate, updated_at " +
+            "FROM realtime_game_stats " +
+            "ORDER BY window_end DESC LIMIT 1"
+        );
+        if (rows != null && !rows.isEmpty()) {
+            return rows.get(0);
+        }
+        return null; // 返回 null 表示尚无实时数据
+    }
+
+    /**
+     * 获取最新窗口的类型分布（Top 10）
+     *
+     * @return List<Map> 每项包含 genre, count, window_start, window_end
+     */
+    public List<Map<String, Object>> getRealtimeTopGenres() {
+        return queryList(
+            "SELECT genre, count, window_start, window_end " +
+            "FROM realtime_genre_counts " +
+            "ORDER BY count DESC LIMIT 10"
+        );
+    }
+
+    /**
+     * 检查是否有实时数据
+     */
+    public boolean hasRealtimeData() {
+        long count = querySingleLong(
+            "SELECT COUNT(*) FROM realtime_game_stats"
+        );
+        return count > 0;
     }
 
     // ============================================================

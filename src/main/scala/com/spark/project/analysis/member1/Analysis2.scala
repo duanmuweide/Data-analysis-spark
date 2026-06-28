@@ -30,7 +30,7 @@ object Analysis2 {
       .orderBy($"game_count".desc)
 
     val totalGames = aggregated.agg(sum("game_count")).first().getLong(0)
-    val totalOwnersAll = aggregated.agg(sum("total_owners")).first().getLong(0)
+    val totalOwnersAll = aggregated.agg(sum("total_owners")).first().getDouble(0).toLong
 
     val withPct = aggregated
       .withColumn("game_pct", round($"game_count" / totalGames * 100, 2))

@@ -32,12 +32,26 @@ object Analysis4 {
 
     println(s"[A4] 完成")
 
-    devRanking.withColumn("market_structure", lit(interpretHHI(hhiDev)))
+    // 计算每个开发商的平台多样性
+    val platformByDev = df
+      .withColumn("plat_count",
+        when(upper($"Windows") === "TRUE" || $"Windows" === "1", 1).otherwise(0) +
+        when(upper($"Mac") === "TRUE" || $"Mac" === "1", 1).otherwise(0) +
+        when(upper($"Linux") === "TRUE" || $"Linux" === "1", 1).otherwise(0)
+      )
+      .groupBy("Developers")
+      .agg(round(avg("plat_count"), 1).as("platform_diversity"))
+
+    devRanking
+      .join(platformByDev, devRanking("developer") === platformByDev("Developers"), "left")
+      .drop("Developers")
+      .withColumn("market_hhi", lit(hhiDev))
+      .withColumn("market_structure", lit(interpretHHI(hhiDev)))
   }
 
   private def developerRanking(spark: SparkSession, df: DataFrame): DataFrame = {
     import spark.implicits._
-    val totalOwners = df.agg(sum("owners_numeric")).first().getLong(0)
+    val totalOwners = df.agg(sum("owners_numeric")).first().getDouble(0).toLong
 
     df.groupBy($"Developers".as("developer"))
       .agg(
@@ -54,7 +68,7 @@ object Analysis4 {
 
   private def publisherRanking(spark: SparkSession, df: DataFrame): DataFrame = {
     import spark.implicits._
-    val totalOwners = df.agg(sum("owners_numeric")).first().getLong(0)
+    val totalOwners = df.agg(sum("owners_numeric")).first().getDouble(0).toLong
 
     df.groupBy($"Publishers".as("publisher"))
       .agg(

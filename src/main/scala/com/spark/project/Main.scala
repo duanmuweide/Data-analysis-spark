@@ -2,6 +2,7 @@ package com.spark.project
 
 import com.spark.project.common.{Config, SparkSessionBuilder, Utils}
 import com.spark.project.analysis.member1.{Analysis1 => A1, Analysis2 => A2, Analysis3 => A3, Analysis4 => A4}
+import com.spark.project.realtime.member1.RealtimeStats
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -12,6 +13,7 @@ import org.apache.spark.sql.SparkSession
  * 2. 读取 Steam 游戏数据
  * 3. 依次执行 4 个离线分析任务
  * 4. 结果写入 MySQL，供 Web 仪表盘展示
+ * 5. （可选）启动实时流处理 (Kafka → Streaming → MySQL)
  *
  * 集群提交:
  *   spark-submit --class com.spark.project.Main \
@@ -26,12 +28,21 @@ import org.apache.spark.sql.SparkSession
  *                --master local[*] \
  *                target/scala-2.12/Sem6SparkProject-assembly-1.0.0.jar \
  *                --sample
+ *
+ * 本地开发 + 启动实时流:
+ *   spark-submit --class com.spark.project.Main \
+ *                --master local[*] \
+ *                target/scala-2.12/Sem6SparkProject-assembly-1.0.0.jar \
+ *                --sample --streaming
  */
 object Main {
 
   def main(args: Array[String]): Unit = {
 
     val useSampleData = args.contains("--sample")
+    val enableStreaming = args.contains("--streaming")
+    val streamingOnly = args.contains("--streaming-only")
+
     val dataPath = if (useSampleData) {
       println("[Main] 使用样例数据运行（14行，开发调试用）")
       Config.STEAM_SAMPLE_FILE
@@ -52,6 +63,9 @@ object Main {
     println("=" * 70)
 
     try {
+      var cleanedDF: org.apache.spark.sql.DataFrame = null
+
+      if (!streamingOnly) {
       // ============================
       // Step 2: 读取 + 清洗数据
       // ============================
@@ -62,17 +76,18 @@ object Main {
       val rawDF = Utils.readSteamData(spark, dataPath, useSampleData)
       println(s"[Main] 原始数据: ${rawDF.count()} 行, ${rawDF.columns.length} 列")
 
-      val cleanedDF = Utils.cleanSteamData(rawDF)
+      cleanedDF = Utils.cleanSteamData(rawDF)
       println(s"[Main] 清洗后数据: ${cleanedDF.count()} 行")
 
-      // 缓存清洗后的数据（多次分析复用）
-      cleanedDF.cache()
-      val cachedCount = cleanedDF.count() // 触发缓存
-      println(s"[Main] 数据已缓存: $cachedCount 行")
+      // 注意：不缓存数据以免 OOM（内存仅 366MB 时 cached 390MB CSV 会爆内存）
+      // 115k 行数据量不大，重复扫描开销远低于 OOM 风险
+      println(s"[Main] 数据就绪: ${cleanedDF.count()} 行（未缓存，避免 OOM）")
+      }
 
       // ============================
-      // Step 3: 离线批处理分析
+      // Step 3: 离线批处理分析（--streaming-only 时跳过）
       // ============================
+      if (!streamingOnly) {
       println("\n" + "=" * 70)
       println("[Main] Step 2: 开始执行 4 个离线分析任务")
       println("=" * 70)
@@ -106,16 +121,46 @@ object Main {
       Utils.saveToDatabase(result4, "analysis_developer_ecosystem")
 
       // ============================
-      // Step 4: 完成
+      // Step 4: 离线分析完成
       // ============================
       println("\n" + "=" * 70)
       println("[Main] 全部 4 个离线分析已完成！")
       println(s"[Main] 结果写入 MySQL: ${Config.JDBC_URL}")
       println("[Main] 启动 Web 服务器查看仪表盘: http://localhost:8080")
       println("=" * 70)
+      } // end if (!streamingOnly)
 
-      // 释放缓存
-      cleanedDF.unpersist()
+      // ============================
+      // Step 5: 启动实时流处理（可选）
+      // ============================
+      if (enableStreaming || streamingOnly) {
+        println("\n" + "=" * 70)
+        println("[Main] Step 3: 启动实时流处理...")
+        println("=" * 70)
+
+        try {
+          val streamingQuery = RealtimeStats.start(spark)
+          println("[Main] ✅ 实时流处理已启动！")
+          println("[Main] Kafka → Spark Streaming → MySQL (realtime_game_stats / realtime_genre_counts)")
+          println("[Main] 前端每 5 秒自动刷新实时数据")
+          println("[Main] 按 Ctrl+C 停止...")
+          println("=" * 70)
+
+          // 保持应用运行，等待 Streaming 终止
+          spark.streams.awaitAnyTermination()
+
+        } catch {
+          case e: Exception =>
+            println(s"[Main] ⚠ 实时流启动失败: ${e.getMessage}")
+            println("[Main] ⚠ 请检查 Kafka 集群是否运行")
+            println("[Main] ⚠ 离线分析结果已写入 MySQL，Web 仪表盘仍可访问")
+        }
+      } else {
+        println("[Main] 💡 提示: 添加 --streaming 参数可同时启动实时流处理")
+        println("[Main]    示例: spark-submit ... --sample --streaming")
+      }
+
+      // 没有缓存，无需释放
 
     } catch {
       case e: Exception =>
@@ -123,6 +168,7 @@ object Main {
         e.printStackTrace()
         sys.exit(1)
     } finally {
+      // 如果启动了 Streaming，finally 块会在 awaitAnyTermination 返回后执行
       spark.stop()
       println("[Main] SparkSession 已关闭")
     }

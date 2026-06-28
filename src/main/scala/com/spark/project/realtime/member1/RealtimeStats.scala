@@ -6,14 +6,21 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery, Trigger}
 
+import java.sql.Timestamp
+import java.util.Properties
+
 /**
  * 实时流统计分析（加分项）: Steam 游戏实时数据仪表盘
  *
- * 数据流: Kafka → Spark Structured Streaming → 窗口聚合 → 内存表
+ * 数据流: Kafka → Spark Structured Streaming → 窗口聚合 → MySQL
  * 前端: dashboard.jsp 每 5 秒轮询 /api/realtime/latest
  *
  * Kafka Topic: steam-game-events
  * 消息格式: JSON { app_id, name, price, genres, estimated_owners, positive, negative, timestamp }
+ *
+ * 输出表:
+ *   - realtime_game_stats  : 最新窗口聚合指标（新游戏数、均价、好评率等）
+ *   - realtime_genre_counts: 最新窗口内各类型分布
  */
 object RealtimeStats {
 
@@ -28,6 +35,19 @@ object RealtimeStats {
     StructField("negative", IntegerType, nullable = true),
     StructField("timestamp", TimestampType, nullable = true)
   ))
+
+  /** 统计输出表的窗口列顺序 (window_start, window_end, ...) */
+  private val WINDOW_COLS: Seq[String] =
+    Seq("window_start", "window_end", "new_games_count",
+        "avg_price", "avg_owners", "avg_positive_rate")
+
+  /** 类型输出表的列顺序 */
+  private val GENRE_COLS: Seq[String] =
+    Seq("genre", "count", "window_start", "window_end")
+
+  // ===================================================================
+  // 启动实时流
+  // ===================================================================
 
   /**
    * 启动实时统计任务
@@ -46,6 +66,7 @@ object RealtimeStats {
       .option("kafka.bootstrap.servers", Config.KAFKA_BOOTSTRAP_SERVERS)
       .option("subscribe", Config.KAFKA_TOPIC)
       .option("startingOffsets", "latest")
+      .option("maxOffsetsPerTrigger", "500")
       .option("failOnDataLoss", "false")
       .load()
 
@@ -60,57 +81,73 @@ object RealtimeStats {
       .select("data.*")
       .filter($"app_id".isNotNull)
 
-    // 3. 添加窗口列和水印
-    val withWatermark = parsedStream
-      .withWatermark("timestamp", "1 minute")
-      .withColumn("genres_array",
-        when($"genres".isNotNull,
-          split(
-            regexp_replace(regexp_replace($"genres", "^\\[|\\]$", ""), "['\"]", ""),
-            ","
-          )
-        )
-      )
+    // 3. 手动累计（每批500条，直接累加写 MySQL）
+    var total: Long = 0; var priceSum: Double = 0; var ownersSum: Double = 0
+    var posSum: Long = 0; var negSum: Long = 0
 
-    // 4. 滑动窗口聚合（窗口60秒，滑动10秒）
-    val windowedAgg = withWatermark
-      .groupBy(
-        window($"timestamp", "60 seconds", "10 seconds")
-      )
-      .agg(
-        count("*").as("new_games_count"),
-        round(avg($"price"), 2).as("avg_price"),
-        round(avg($"estimated_owners"), 0).as("avg_owners"),
-        round(avg($"positive") / (avg($"positive") + avg($"negative") + 1) * 100, 1)
-          .as("avg_positive_rate")
-      )
-      .select(
-        $"window.start".as("window_start"),
-        $"window.end".as("window_end"),
-        $"new_games_count",
-        $"avg_price",
-        $"avg_owners",
-        $"avg_positive_rate"
-      )
+    val query = parsedStream.writeStream
+      .trigger(Trigger.ProcessingTime("5 seconds"))
+      .option("checkpointLocation", s"${Config.DATA_ROOT}/checkpoints/realtime_stats")
+      .foreachBatch { (batchDF: DataFrame, _: Long) =>
+        val cnt = batchDF.count()
+        if (cnt > 0) {
+          val row = batchDF.agg(
+            count("*"), avg("price"), avg("estimated_owners"), avg("positive"), avg("negative")
+          ).collect()(0)
+          val c = row.getLong(0)
+          total += c
+          priceSum += row.getDouble(1) * c
+          ownersSum += (if (row.isNullAt(2)) 0 else row.getDouble(2)) * c
+          posSum += (if (row.isNullAt(3)) 0L else row.getDouble(3).toLong)
+          negSum += (if (row.isNullAt(4)) 0L else row.getDouble(4).toLong)
+          val avgP = f"${priceSum / total}%.2f".toDouble
+          val avgO = (ownersSum / total).toLong
+          val avgR = f"${posSum.toDouble / (posSum + negSum + 1) * 100}%.1f".toDouble
 
-    // 5. 输出到内存表
-    val query = windowedAgg.writeStream
-      .outputMode(OutputMode.Append())
-      .format("memory")
-      .queryName("realtime_game_stats")
-      .trigger(Trigger.ProcessingTime("10 seconds"))
-      .option("checkpointLocation",
-        s"${Config.DATA_ROOT}/checkpoints/realtime_stats")
+          val conn = java.sql.DriverManager.getConnection(Config.JDBC_URL, Config.DB_USER, Config.DB_PASSWORD)
+          try {
+            conn.createStatement().execute("TRUNCATE TABLE realtime_game_stats")
+            val ps = conn.prepareStatement("INSERT INTO realtime_game_stats VALUES (NOW(),NOW(),?,?,?,?,NOW())")
+            ps.setLong(1, total); ps.setDouble(2, avgP); ps.setDouble(3, avgO); ps.setDouble(4, avgR)
+            ps.executeUpdate(); ps.close()
+          } finally { conn.close() }
+          println(s"[Realtime] ✅ $total 条 | 均价:$avgP | 好评率:$avgR%")
+        }
+      }
       .start()
 
-    println("[Realtime] 实时流处理已启动 - 查询名: realtime_game_stats")
-    println(s"[Realtime] Kafka: ${Config.KAFKA_BOOTSTRAP_SERVERS}, Topic: ${Config.KAFKA_TOPIC}")
+    println("[Realtime] 手动累计已启动 → MySQL::realtime_game_stats")
 
     query
   }
 
+  /** 使用 TRUNCATE + INSERT 避免 DROP TABLE 导致查询空窗 */
+  private def truncateAndWrite(df: DataFrame, table: String, props: Properties): Unit = {
+    val conn = java.sql.DriverManager.getConnection(Config.JDBC_URL, Config.DB_USER, Config.DB_PASSWORD)
+    try {
+      conn.createStatement().execute(s"TRUNCATE TABLE $table")
+      conn.close()
+    } catch {
+      case _: Exception => // 表不存在则建表
+    }
+    df.write.mode("append").jdbc(Config.JDBC_URL, table, props)
+  }
+
+  /** 创建 JDBC 连接属性 */
+  private def jdbcProps(): Properties = {
+    val props = new Properties()
+    props.setProperty("user", Config.DB_USER)
+    props.setProperty("password", Config.DB_PASSWORD)
+    props.setProperty("driver", "com.mysql.cj.jdbc.Driver")
+    props
+  }
+
+  // ===================================================================
+  // 查询辅助方法（供 Web API 通过 Spark 内存表调用 — 兼容旧方案）
+  // ===================================================================
+
   /**
-   * 获取最新实时统计（供 Web API 调用）
+   * 获取最新实时统计（供 Web API 调用 — 优先用 MySQL 方案）
    */
   def getLatestStats(spark: SparkSession): DataFrame = {
     try {

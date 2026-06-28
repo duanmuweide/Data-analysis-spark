@@ -37,7 +37,8 @@ object SparkSessionBuilder {
 
     // 本地模式特殊配置
     if (master.contains("local")) {
-      conf.set("spark.sql.shuffle.partitions", "4") // 本地模式降低分区数
+      conf.set("spark.sql.shuffle.partitions", "8") // 本地模式：多分区降低 OOM 风险
+      conf.set("spark.driver.memory", "2g") // 请求 2G 驱动内存
     }
 
     // 压缩优化

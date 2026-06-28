@@ -65,8 +65,8 @@ def random_game():
 
 def main():
     parser = argparse.ArgumentParser(description="Steam 游戏实时数据模拟器")
-    parser.add_argument("--bootstrap-server", default="localhost:9092",
-                        help="Kafka Bootstrap Server 地址 (默认: localhost:9092)")
+    parser.add_argument("--bootstrap-server", default="localhost:9091,localhost:9092,localhost:9093",
+                        help="Kafka Bootstrap Server 地址 (默认: localhost:9091,localhost:9092,localhost:9093)")
     parser.add_argument("--topic", default="steam-game-events",
                         help="Kafka Topic (默认: steam-game-events)")
     parser.add_argument("--rate", type=int, default=3,

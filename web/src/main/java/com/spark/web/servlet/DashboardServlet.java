@@ -1,16 +1,14 @@
 package com.spark.web.servlet;
 
 import com.spark.web.dao.MysqlDao;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.WebServlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.Map;
 
 /**
  * 仪表盘主页 Servlet — 加载总览数据
  */
-@WebServlet("/dashboard")
 public class DashboardServlet extends HttpServlet {
 
     private final MysqlDao dao = new MysqlDao();

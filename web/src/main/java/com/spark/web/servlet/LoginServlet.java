@@ -1,9 +1,8 @@
 package com.spark.web.servlet;
 
 import com.spark.web.dao.MysqlDao;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.WebServlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.*;
 import java.io.IOException;
 
 /**
@@ -11,7 +10,6 @@ import java.io.IOException;
  *
  * 参考上学期 Data-analysis 项目的 LoginServlet 设计
  */
-@WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private final MysqlDao dao = new MysqlDao();
