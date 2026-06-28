@@ -23,14 +23,14 @@ object Config {
 
   // ==================== 数据路径配置 ====================
 
-  /** 数据根目录（HDFS 路径，集群提交时使用） */
+  /** 数据根目录（VM 上 HDFS 或本地路径） */
   val DATA_ROOT: String = "/data/member1"
 
-  /** Steam 游戏主数据文件（Excel格式，390MB，115290 行） */
-  val STEAM_DATA_FILE: String = s"$DATA_ROOT/games.csv"
+  /** Steam 游戏主数据文件（CSV格式，390MB，115290 行） */
+  val STEAM_DATA_FILE: String = "file:///home/master/games.csv"
 
   /** Steam 游戏样例数据（14行，开发调试用） */
-  val STEAM_SAMPLE_FILE: String = s"$DATA_ROOT/games-example.csv"
+  val STEAM_SAMPLE_FILE: String = "file:///home/master/games.csv"
 
   // ==================== Spark 配置 ====================
 
@@ -51,16 +51,27 @@ object Config {
   /** 模拟数据源端口 */
   val STREAMING_SOURCE_PORT: Int = 9999
 
-  // ==================== 数据库配置（分析结果存储） ====================
+  /** Kafka 集群地址（VM 本机 master-pc 上的伪集群） */
+  val KAFKA_BOOTSTRAP_SERVERS: String = "master-pc:9091,master-pc:9092,master-pc:9093"
 
-  /** JDBC URL */
-  val JDBC_URL: String = "jdbc:mysql://localhost:3306/spark_steam_games"
+  /** Kafka Topic */
+  val KAFKA_TOPIC: String = "steam-game-events"
+
+  // ==================== 数据库配置（分析结果存储） ====================
+  //
+  // 注意：请确保 MySQL 服务已启动且数据库已创建：
+  //   mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS spark_steam_games;"
+  //   mysql -u root -p -e "GRANT ALL ON spark_steam_games.* TO 'root'@'%' IDENTIFIED BY '你的密码'; FLUSH PRIVILEGES;"
+  // 如果不需要写入 MySQL，程序会自动跳过（不崩溃）
+
+  /** JDBC URL（VM 通过桥接访问 Windows 上的 MySQL） */
+  val JDBC_URL: String = "jdbc:mysql://192.168.211.1:3306/spark_steam_games"
 
   /** 数据库用户名 */
   val DB_USER: String = "root"
 
   /** 数据库密码 */
-  val DB_PASSWORD: String = "password"
+  val DB_PASSWORD: String = "root"
 
   // ==================== 分析阈值 ====================
 
