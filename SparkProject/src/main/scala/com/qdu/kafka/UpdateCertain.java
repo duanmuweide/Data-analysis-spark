@@ -48,7 +48,7 @@ public class UpdateCertain {
                 pstmt.executeUpdate();
             }
 
-            System.out.println("插入成功: checkid=" + newCheckId + ", district=海淀, area=100, community=世茂城, price_per_sqm=378810");
+            System.out.println("插入成功: checkid=" + newCheckId + ", district=海淀, area=100, community=世茂城, price_per_sqm=3788100");
             System.out.println("");
             System.out.println("数据流: house_info_clean_checkid → Producer(1秒内) → Kafka → Consumer → certain_analysis → 前端(3秒刷新)");
 

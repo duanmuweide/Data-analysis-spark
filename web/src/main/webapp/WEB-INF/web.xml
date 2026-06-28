@@ -7,8 +7,9 @@
 
     <display-name>Steam Game Analysis Dashboard</display-name>
 
-    <!-- 首页 -->
+    <!-- 首页（统一入口 → 三个项目选择） -->
     <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
         <welcome-file>jsp/index.jsp</welcome-file>
     </welcome-file-list>
 
@@ -61,6 +62,16 @@
         <error-code>500</error-code>
         <location>/jsp/error.jsp</location>
     </error-page>
+
+    <!-- 房屋分析数据 API（cjz 项目合并） -->
+    <servlet>
+        <servlet-name>HouseDataServlet</servlet-name>
+        <servlet-class>com.spark.web.servlet.HouseDataServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HouseDataServlet</servlet-name>
+        <url-pattern>/house/data</url-pattern>
+    </servlet-mapping>
 
     <!-- Session 配置 -->
     <session-config>

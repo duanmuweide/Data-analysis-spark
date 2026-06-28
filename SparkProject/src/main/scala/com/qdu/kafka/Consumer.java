@@ -42,7 +42,7 @@ public class Consumer {
         Properties p = new Properties();
 
         // 1. 配置 Kafka 集群地址
-        p.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "hadoop101:9092,niit-slaves1:9092,niit-slaves2:9092");
+        p.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "master-pc:9091,master-pc:9092,master-pc:9093");
 
         // 2. Key 和 Value 的反序列化方式
         p.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
