@@ -22,7 +22,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES; -- 如果CSV有表头，请加上这行
 --建立清理后的表
 CREATE TABLE IF NOT EXISTS house_info_clean_checkid (
-                                                        rowkey VARCHAR(255) COMMENT '唯一标识:市区_小区_序号',
+    rowkey VARCHAR(255) COMMENT '唯一标识:市区_小区_序号',
     district VARCHAR(50) COMMENT '市区',
     community VARCHAR(100) COMMENT '小区',
     layout VARCHAR(50) COMMENT '户型',
