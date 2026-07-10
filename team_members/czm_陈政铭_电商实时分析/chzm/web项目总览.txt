@@ -1,0 +1,718 @@
+电商 Spark 分析结果 Web 项目总览
+
+一、项目定位
+
+这个 Web 项目只负责展示 Spark 分析后的结果，不负责重新做大数据计算。
+
+正确链路是：
+
+离线链路：
+CSV 原始数据 -> HDFS -> Spark on YARN 离线分析 -> MySQL ADS 结果表 -> Flask 后端接口 -> 前端 ECharts 展示
+
+实时链路：
+order_events.jsonl -> Kafka -> Spark Structured Streaming -> MySQL RT 结果表 -> Flask 后端接口 -> 前端 ECharts 定时刷新
+
+必须注意：
+1. 前端不直接读取 CSV。
+2. 前端不直接连接 MySQL。
+3. 前端不直接连接 Spark、HDFS、Kafka。
+4. Web 项目只查询 MySQL 中已经生成好的分析结果表。
+
+
+二、为什么不需要 Tomcat 和 Servlet
+
+本项目不需要 Tomcat，也不需要 Servlet。
+
+原因：
+1. Tomcat 和 Servlet 是 Java Web 项目常用的技术。
+2. 本项目后端选择 Python Flask，不是 Java 后端。
+3. Flask 自己就能提供 HTTP 接口和页面访问。
+4. 本地开发时使用 python app.py 启动。
+5. 服务器部署时使用 Gunicorn 启动 Flask 项目。
+
+因此，本项目不使用：
+1. Spring Boot
+2. Tomcat
+3. Servlet
+4. JSP
+5. Vue
+6. React
+
+推荐技术路线：
+
+Python Flask 后端 + MySQL + HTML/CSS/JavaScript + ECharts
+
+这个方案简单、清楚、容易部署，适合当前 Spark 分析结果展示项目。
+
+
+三、Web 项目推荐目录结构
+
+建议新建一个独立 Web 项目目录，例如：
+
+spark-ecommerce-web/
+  app.py
+  db.py
+  requirements.txt
+  .env
+  routes/
+    analysis.py
+  templates/
+    index.html
+  static/
+    css/
+      style.css
+    js/
+      dashboard.js
+
+各文件作用：
+
+app.py
+  Flask 项目主入口。
+  负责启动 Web 服务、注册接口路由、返回首页。
+
+db.py
+  MySQL 连接封装。
+  负责读取数据库配置，创建连接，执行查询。
+
+requirements.txt
+  Python 依赖清单。
+  建议包含 flask、pymysql、python-dotenv、gunicorn。
+
+.env
+  数据库连接配置。
+  例如 DB_HOST、DB_PORT、DB_USER、DB_PASSWORD、DB_NAME。
+
+routes/analysis.py
+  后端分析接口文件。
+  负责提供 5 个查询接口，分别查询 5 张 MySQL 结果表。
+
+templates/index.html
+  前端首页。
+  页面上放 5 个分析模块和 ECharts 图表容器。
+
+static/js/dashboard.js
+  前端图表逻辑。
+  负责调用后端 API，整理返回数据，调用 ECharts 渲染图表。
+
+static/css/style.css
+  页面样式文件。
+  负责看板布局、卡片、表格、标题、颜色等样式。
+
+
+四、后端接口设计
+
+当前 Spark 代码实际写入 MySQL 的结果表只有 5 张：
+
+1. ads_sales_time_trend
+2. ads_category_sales_rank
+3. ads_user_value_level
+4. ads_category_association_rules
+5. rt_category_window_sales
+
+Web 项目接口必须和这 5 张表对齐，不要使用早期文档里没有实际建表的 rt_sales_window、rt_category_topn、rt_province_topn、rt_order_status。
+
+
+1. 销售趋势接口
+
+接口路径：
+/api/sales/trend
+
+来源表：
+ads_sales_time_trend
+
+作用：
+展示每天、每小时的销售趋势，包括订单数、用户数、销售额、优惠金额、实付金额、客单价。
+
+建议后端查询：
+
+按天统计：
+SELECT
+  stat_date,
+  SUM(order_count) AS order_count,
+  SUM(pay_amount) AS pay_amount,
+  ROUND(SUM(pay_amount) / NULLIF(SUM(order_count), 0), 2) AS avg_order_amount
+FROM ads_sales_time_trend
+GROUP BY stat_date
+ORDER BY stat_date;
+
+按小时统计：
+SELECT
+  stat_hour,
+  SUM(order_count) AS order_count,
+  SUM(pay_amount) AS pay_amount
+FROM ads_sales_time_trend
+GROUP BY stat_hour
+ORDER BY stat_hour;
+
+前端展示：
+1. 每日销售额折线图。
+2. 每日订单数折线图或柱状图。
+3. 小时订单量柱状图。
+4. 可以在顶部展示总销售额、总订单数、平均客单价。
+
+可视化难度：
+简单。
+这是最适合放在首页最上面的图，因为销售趋势最容易解释。
+
+
+2. 品类销售排行接口
+
+接口路径：
+/api/category/top
+
+来源表：
+ads_category_sales_rank
+
+作用：
+展示不同商品品类的销售额、销量、订单数和排名。
+
+建议后端查询：
+
+SELECT
+  category,
+  SUM(order_count) AS order_count,
+  SUM(quantity_sum) AS quantity_sum,
+  SUM(amount_sum) AS amount_sum
+FROM ads_category_sales_rank
+GROUP BY category
+ORDER BY amount_sum DESC
+LIMIT 10;
+
+前端展示：
+1. Top10 品类销售额横向柱状图。
+2. 品类销售排行榜表格。
+3. 表格字段建议：排名、品类、销售额、销量、订单数。
+
+可视化难度：
+简单。
+ECharts 横向柱状图非常适合展示排行。
+
+
+3. 用户价值分层接口
+
+接口路径：
+/api/user/value-level
+
+来源表：
+ads_user_value_level
+
+作用：
+展示 RFM 用户价值分层结果。
+
+ads_user_value_level 是用户明细层级结果表，但前端不要直接展示所有 user_id 明细，而应该展示聚合后的分布。
+
+建议后端查询：
+
+按用户层级统计：
+SELECT
+  user_level,
+  COUNT(*) AS user_count
+FROM ads_user_value_level
+GROUP BY user_level;
+
+按会员等级和用户层级统计：
+SELECT
+  member_level,
+  user_level,
+  COUNT(*) AS user_count
+FROM ads_user_value_level
+GROUP BY member_level, user_level
+ORDER BY member_level, user_level;
+
+前端展示：
+1. 用户价值层级环形图。
+2. 会员等级和用户层级堆叠柱状图。
+3. 可以展示总用户数。
+
+可视化难度：
+中等偏简单。
+环形图好画，堆叠柱状图需要前端把 member_level 和 user_level 整理成 ECharts 需要的 series。
+
+
+4. 品类关联规则接口
+
+接口路径：
+/api/category/association
+
+来源表：
+ads_category_association_rules
+
+作用：
+展示经常一起购买的商品品类组合。
+
+核心指标：
+support：支持度，表示这个品类组合在所有购物篮中出现的比例。
+confidence：置信度，表示买了前项品类后，又买后项品类的概率。
+lift：提升度，大于 1 表示两个品类存在正向关联。
+
+建议后端查询：
+
+SELECT
+  antecedent,
+  consequent,
+  support,
+  confidence,
+  lift,
+  pair_order_count
+FROM ads_category_association_rules
+ORDER BY lift DESC, confidence DESC, support DESC
+LIMIT 10;
+
+前端展示：
+1. Top10 关联规则表格。
+2. 可选做关系图，节点是品类，边是 antecedent -> consequent，边权重可以用 lift。
+
+可视化难度：
+表格简单，关系图中等。
+如果时间紧，优先做 Top10 表格，答辩时更稳定。
+
+
+5. 实时品类窗口销售接口
+
+接口路径：
+/api/realtime/category-window
+
+来源表：
+rt_category_window_sales
+
+作用：
+展示 Spark Structured Streaming 写入 MySQL 的实时窗口统计结果。
+
+表中字段含义：
+window_start：统计窗口开始时间。
+window_end：统计窗口结束时间。
+category：商品品类。
+order_count：窗口内订单数。
+pay_amount：窗口内实付金额。
+batch_id：Spark micro-batch 批次号。
+update_time：写入 MySQL 的更新时间。
+
+建议后端查询：
+
+SELECT
+  window_start,
+  window_end,
+  category,
+  order_count,
+  pay_amount,
+  batch_id,
+  update_time
+FROM rt_category_window_sales
+ORDER BY update_time DESC
+LIMIT 20;
+
+前端展示：
+1. 最新窗口品类销售额柱状图。
+2. 最新窗口品类订单数柱状图。
+3. 最近实时结果表格。
+4. 页面每 3 到 5 秒自动请求一次接口。
+
+前端刷新方式：
+使用 JavaScript 的 setInterval。
+
+示例逻辑：
+setInterval(loadRealtimeCategoryWindow, 5000);
+
+每次请求后端接口后，调用 chart.setOption 更新 ECharts 图表。
+
+可视化难度：
+简单到中等。
+图本身不难，关键是实时任务必须正在运行，并且 MySQL 的 update_time 能持续变化。
+
+
+五、前端页面设计
+
+推荐首页展示顺序：
+
+1. 销售趋势总览
+2. 品类销售排行
+3. 用户价值分层
+4. 品类关联规则
+5. 实时品类窗口销售
+
+这个顺序适合答辩讲解：
+先讲整体销售表现，再讲品类结构，再讲用户价值，再讲数据挖掘，最后讲实时链路。
+
+页面不需要做得过于复杂。
+
+建议布局：
+1. 顶部标题：电商 Spark 数据分析可视化平台。
+2. 顶部指标卡片：总销售额、总订单数、平均客单价、更新时间。
+3. 中间区域：多个 ECharts 图表。
+4. 底部或右侧：排行表格、关联规则表格、实时数据表格。
+
+
+六、动态页面是什么意思
+
+任务文档要求使用动态页面实现数据展示，不能使用静态数据展示。
+
+这里的动态页面不是说必须使用 Vue、React 或复杂前端框架。
+
+动态页面的核心意思是：
+1. 页面数据不能写死。
+2. 不能只放截图。
+3. 不能只放静态 Excel 或静态 JSON 文件。
+4. 页面必须通过 Web 后端接口查询 MySQL 中的真实分析结果。
+5. 实时模块需要能定时刷新最新结果。
+
+所以，普通 HTML + JavaScript + ECharts 也可以满足要求。
+
+只要流程是：
+
+浏览器页面 -> 请求 Flask API -> Flask 查询 MySQL -> 返回 JSON -> ECharts 渲染图表
+
+这就是动态数据展示。
+
+
+七、本地开发启动方式
+
+本地开发建议使用 VSCode，不需要 IDEA。
+
+IDEA 继续负责 Spark Scala 项目。
+VSCode 负责 Python Flask Web 项目。
+
+本地启动步骤：
+
+1. 进入 Web 项目目录
+
+cd spark-ecommerce-web
+
+2. 创建 Python 虚拟环境
+
+python -m venv .venv
+
+3. 激活虚拟环境
+
+Windows PowerShell：
+.venv\Scripts\Activate.ps1
+
+Windows CMD：
+.venv\Scripts\activate.bat
+
+Linux：
+source .venv/bin/activate
+
+4. 安装依赖
+
+pip install flask pymysql python-dotenv
+
+或者使用 requirements.txt：
+
+pip install -r requirements.txt
+
+5. 配置 .env
+
+示例：
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=spark
+DB_PASSWORD=spark123456
+DB_NAME=spark_ecommerce
+
+如果 MySQL 在服务器上，就把 DB_HOST 改成服务器 MySQL 地址。
+
+6. 启动 Flask
+
+python app.py
+
+7. 浏览器访问
+
+http://127.0.0.1:5000
+
+
+八、服务器部署方式
+
+如果后续把 Web 项目部署到 Linux 服务器，推荐使用：
+
+Flask + Gunicorn + Nginx + MySQL
+
+部署步骤：
+
+1. 上传 Web 项目到服务器
+
+例如：
+/opt/czm/spark-ecommerce-web
+
+2. 进入项目目录
+
+cd /opt/czm/spark-ecommerce-web
+
+3. 创建虚拟环境
+
+python3 -m venv .venv
+
+4. 激活虚拟环境
+
+source .venv/bin/activate
+
+5. 安装依赖
+
+pip install -r requirements.txt
+
+如果没有 requirements.txt，可以执行：
+
+pip install flask pymysql python-dotenv gunicorn
+
+6. 配置 .env
+
+示例：
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=spark
+DB_PASSWORD=spark123456
+DB_NAME=spark_ecommerce
+
+7. 使用 Gunicorn 启动
+
+gunicorn -w 2 -b 0.0.0.0:8000 app:app
+
+说明：
+1. -w 2 表示启动 2 个 worker。
+2. 0.0.0.0:8000 表示监听服务器 8000 端口。
+3. app:app 表示 app.py 文件中的 Flask 实例变量名也叫 app。
+
+8. 浏览器访问
+
+http://服务器IP:8000
+
+9. 可选：配置 Nginx
+
+如果希望使用 80 端口访问，可以用 Nginx 反向代理到 8000 端口。
+
+访问形式变成：
+
+http://服务器IP
+
+
+九、与 Spark 大数据项目的衔接流程
+
+1. 先初始化 MySQL
+
+执行 chzm/ecommerce_analysis/scripts/mysql_init.sql。
+
+这会创建数据库：
+spark_ecommerce
+
+并创建 5 张结果表：
+ads_sales_time_trend
+ads_category_sales_rank
+ads_user_value_level
+ads_category_association_rules
+rt_category_window_sales
+
+2. 离线分析可以提前执行
+
+离线 4 张 ADS 表可以先通过 Spark 写入 MySQL。
+
+离线输入文件：
+users.csv
+products.csv
+orders.csv
+order_items.csv
+
+离线输出表：
+ads_sales_time_trend
+ads_category_sales_rank
+ads_user_value_level
+ads_category_association_rules
+
+3. 离线执行流程
+
+上传 CSV 到 HDFS：
+hdfs dfs -mkdir -p /user/czm/ecommerce/raw
+hdfs dfs -put -f users.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f products.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f orders.csv /user/czm/ecommerce/raw/
+hdfs dfs -put -f order_items.csv /user/czm/ecommerce/raw/
+
+先 dry-run：
+spark-submit \
+  --class com.niit.spark.ecommerce.OfflineJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=6 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --input /user/czm/ecommerce/raw \
+  --dry-run
+
+正式写入 MySQL：
+spark-submit \
+  --class com.niit.spark.ecommerce.OfflineJob \
+  --master yarn \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --conf spark.sql.shuffle.partitions=6 \
+  ecommerce-analysis-1.0-SNAPSHOT-jar-with-dependencies.jar \
+  --input /user/czm/ecommerce/raw \
+  --jdbc-url "jdbc:mysql://192.168.211.1:3306/spark_ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true" \
+  --jdbc-user spark \
+  --jdbc-password spark123456
+
+注意：
+如果 MySQL 在 Windows 本机，jdbc-url 要写虚拟机能访问到的 Windows IP。
+例如文档中使用的是 192.168.211.1。
+
+4. 实时分析不要提前一次性导入
+
+实时分析不是提前导入一批固定数据。
+
+它的正确逻辑是：
+Kafka producer 持续发送订单事件 -> StreamingJob 持续消费 -> MySQL 实时结果表持续更新 -> Web 页面定时刷新。
+
+实时输出表：
+rt_category_window_sales
+
+实时演示顺序：
+1. 启动 Web 项目。
+2. 启动 Kafka。
+3. 创建 topic：czm_order_events。
+4. 启动 Spark StreamingJob。
+5. 再启动 kafka_order_producer.py。
+6. 打开 Web 页面观察实时图表刷新。
+
+特别注意：
+StreamingJob 代码中使用 startingOffsets=latest。
+这表示它只消费启动之后 Kafka 新发送的消息。
+所以必须先启动 StreamingJob，再启动 producer。
+如果先启动 producer，把消息提前发完，StreamingJob 可能消费不到这些历史消息。
+
+
+十、CSV 和 JSON 文件作用
+
+1. users.csv
+
+用户信息表。
+
+主要字段：
+user_id：用户 ID。
+user_name：用户昵称。
+gender：性别。
+age：年龄。
+province：省份。
+city：城市。
+member_level：会员等级。
+register_date：注册日期。
+
+用途：
+用于用户价值分层分析。
+Spark 会把订单结果和用户信息关联，得到用户的省份、城市、会员等级。
+
+2. products.csv
+
+商品信息表。
+
+主要字段：
+product_id：商品 ID。
+product_name：商品名称。
+category：商品一级品类。
+brand：品牌。
+price：商品标价。
+cost：商品成本。
+
+用途：
+用于补充商品品类信息。
+品类销售排行和品类关联规则都依赖商品品类。
+
+3. orders.csv
+
+订单主表。
+
+主要字段：
+order_id：订单 ID。
+user_id：用户 ID。
+order_time：下单时间。
+pay_time：支付时间。
+province：收货省份。
+city：收货城市。
+channel：下单渠道。
+order_status：订单状态。
+total_amount：订单总金额。
+discount_amount：优惠金额。
+pay_amount：实付金额。
+
+用途：
+这是离线分析最核心的事实表。
+销售趋势、用户价值分层都主要依赖 orders.csv。
+代码只统计 order_status 为 已支付 或 已完成 的订单。
+
+4. order_items.csv
+
+订单明细表。
+
+主要字段：
+item_id：明细 ID。
+order_id：订单 ID。
+product_id：商品 ID。
+category：商品品类快照。
+quantity：购买数量。
+price：单价。
+amount：明细金额。
+
+用途：
+用于分析订单里面买了哪些商品。
+品类销售排行和品类关联规则都依赖 order_items.csv。
+
+5. order_events.jsonl
+
+实时订单事件文件。
+
+每一行是一个 JSON 对象。
+
+主要字段：
+order_id、user_id、order_time、province、city、category、pay_amount、order_status、channel。
+
+用途：
+给 kafka_order_producer.py 使用。
+producer 会读取这个文件，把每行订单事件发送到 Kafka。
+StreamingJob 再从 Kafka 读取事件，计算实时窗口销售结果。
+
+
+十一、答辩时可以这样解释
+
+本项目不是让 Web 重新计算数据，而是让 Web 展示 Spark 已经计算好的结果。
+
+离线部分：
+Spark 批处理读取 HDFS 上的 CSV，完成 4 类离线分析，并写入 MySQL 的 ADS 表。
+
+实时部分：
+Kafka 模拟实时订单流，Spark Structured Streaming 按滑动窗口统计品类销售结果，并持续写入 MySQL 的 RT 表。
+
+Web 部分：
+Flask 后端查询 MySQL 结果表，返回 JSON；前端用 ECharts 把 JSON 渲染成图表。
+
+动态展示：
+页面数据来自后端实时查询 MySQL，不是写死的截图或静态数据。
+实时模块通过 setInterval 定时请求接口，实现页面自动刷新。
+
+
+十二、最终建议
+
+这个 Web 项目不要做复杂。
+
+推荐坚持：
+1. Flask 后端。
+2. MySQL 查询。
+3. 普通 HTML/CSS/JS。
+4. ECharts 图表。
+5. 一个首页展示 5 个模块。
+
+不要引入：
+1. Spring Boot。
+2. Tomcat。
+3. Servlet。
+4. Vue。
+5. React。
+6. 复杂权限系统。
+
+当前项目最重要的不是架构复杂，而是链路完整：
+
+Spark 能算 -> MySQL 有结果 -> Flask 能查 -> ECharts 能展示 -> 实时图表能刷新。

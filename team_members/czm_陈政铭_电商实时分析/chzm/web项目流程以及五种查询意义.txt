@@ -1,0 +1,261 @@
+电商 Spark 分析结果 Web 展示流程
+
+一、Web 展示的数据来源
+
+前端不要直接读取原始 CSV，也不要直接连接 Spark、HDFS、Kafka。
+
+正确链路：
+
+Spark 离线分析 / Spark 实时分析
+  -> MySQL 结果表
+  -> 后端接口查询 MySQL
+  -> 前端 ECharts 展示
+
+也就是说，Web 项目只需要对接 MySQL 中的 ADS/RT 结果表。
+
+
+二、推荐页面结构
+
+建议 Web 首页按下面 5 个模块展示：
+
+1. 销售趋势总览
+2. 品类销售排行
+3. 用户价值分层
+4. 品类关联规则
+5. 实时品类窗口销售
+
+展示顺序建议不要乱：
+
+销售趋势 -> 品类排行 -> 用户分层 -> 关联规则 -> 实时刷新
+
+这个顺序更适合答辩叙事：先讲整体销售表现，再讲品类结构，再讲用户价值，最后讲数据挖掘和实时链路。
+
+
+三、模块 1：销售趋势总览
+
+来源表：
+
+ads_sales_time_trend
+
+适合图表：
+
+折线图、柱状图、双轴图
+
+展示内容：
+
+每日销售额
+每日订单数
+每日客单价
+小时销售高峰
+
+后端推荐查询：
+
+SELECT
+  stat_date,
+  SUM(order_count) AS order_count,
+  SUM(pay_amount) AS pay_amount,
+  ROUND(SUM(pay_amount) / NULLIF(SUM(order_count), 0), 2) AS avg_order_amount
+FROM ads_sales_time_trend
+GROUP BY stat_date
+ORDER BY stat_date;
+
+小时高峰查询：
+
+SELECT
+  stat_hour,
+  SUM(order_count) AS order_count,
+  SUM(pay_amount) AS pay_amount
+FROM ads_sales_time_trend
+GROUP BY stat_hour
+ORDER BY stat_hour;
+
+前端展示建议：
+
+折线图：x 轴为 stat_date，y 轴为 pay_amount
+柱状图：x 轴为 stat_hour，y 轴为 order_count
+
+
+四、模块 2：品类销售排行
+
+来源表：
+
+ads_category_sales_rank
+
+适合图表：
+
+横向柱状图、排行榜表格
+
+展示内容：
+
+Top10 品类销售额
+Top10 品类销量
+品类订单数
+
+后端推荐查询：
+
+SELECT
+  category,
+  SUM(order_count) AS order_count,
+  SUM(quantity_sum) AS quantity_sum,
+  SUM(amount_sum) AS amount_sum
+FROM ads_category_sales_rank
+GROUP BY category
+ORDER BY amount_sum DESC
+LIMIT 10;
+
+前端展示建议：
+
+横向柱状图：y 轴为 category，x 轴为 amount_sum
+排行榜表格：category、quantity_sum、amount_sum、order_count
+
+
+五、模块 3：用户价值分层
+
+来源表：
+
+ads_user_value_level
+
+适合图表：
+
+饼图、环形图、分组柱状图
+
+展示内容：
+
+高价值用户、重点发展用户、一般保持用户、低价值用户的人数占比
+不同会员等级的用户价值分布
+
+后端推荐查询：
+
+SELECT
+  user_level,
+  COUNT(*) AS user_count
+FROM ads_user_value_level
+GROUP BY user_level;
+
+会员等级分布：
+
+SELECT
+  member_level,
+  user_level,
+  COUNT(*) AS user_count
+FROM ads_user_value_level
+GROUP BY member_level, user_level
+ORDER BY member_level, user_level;
+
+前端展示建议：
+
+环形图：展示 user_level 占比
+堆叠柱状图：展示 member_level 下不同 user_level 的分布
+
+注意：
+
+不要直接把所有 user_id 明细展示到页面上。用户表是明细数据，前端应展示聚合后的层级分布。
+
+
+六、模块 4：品类关联规则
+
+来源表：
+
+ads_category_association_rules
+
+适合图表：
+
+关系图、桑基图、TopN 表格
+
+展示内容：
+
+经常一起购买的品类组合
+support 支持度
+confidence 置信度
+lift 提升度
+
+后端推荐查询：
+
+SELECT
+  antecedent,
+  consequent,
+  support,
+  confidence,
+  lift
+FROM ads_category_association_rules
+ORDER BY lift DESC, confidence DESC
+LIMIT 10;
+
+前端展示建议：
+
+优先做 Top10 规则表格，最稳。
+如果时间够，再做关系图：antecedent -> consequent，边权重使用 lift 或 confidence。
+
+答辩解释重点：
+
+support 表示这个组合出现的比例。
+confidence 表示买了前项后又买后项的概率。
+lift 大于 1 表示两个品类存在正向关联。
+
+
+七、模块 5：实时品类窗口销售
+
+来源表：
+
+rt_category_window_sales
+
+适合图表：
+
+自动刷新的柱状图、折线图、滚动表格
+
+展示内容：
+
+最近窗口内各品类订单数
+最近窗口内各品类销售额
+update_time 持续变化
+
+后端推荐查询：
+
+SELECT
+  window_start,
+  window_end,
+  category,
+  order_count,
+  pay_amount,
+  update_time
+FROM rt_category_window_sales
+ORDER BY update_time DESC
+LIMIT 20;
+
+前端刷新方式：
+
+setInterval 每 3 到 5 秒请求一次后端接口。
+后端接口查询 MySQL 最新数据。
+前端调用 chart.setOption 更新 ECharts。
+
+注意：
+
+实时展示不是前端直接连 Kafka。
+实时展示也不是前端直接连 Spark。
+实时刷新本质是 MySQL 实时结果表不断更新，Web 定时查询最新结果。
+
+
+八、后端接口建议
+
+建议至少提供 5 个接口：
+
+/api/sales/trend
+/api/category/top
+/api/user/value-level
+/api/category/association
+/api/realtime/category-window
+
+接口返回 JSON 即可，前端 ECharts 只关心字段数组。
+
+
+九、答辩展示证据
+
+Web 展示前，最好保留这些截图：
+
+1. MySQL 中 4 张离线 ADS 表有数据。
+2. Web 页面销售趋势图正常显示。
+3. Web 页面品类 Top10 正常显示。
+4. Web 页面用户价值分层正常显示。
+5. Web 页面关联规则 Top10 正常显示。
+6. 实时任务启动后，rt_category_window_sales 的 update_time 持续变化。
+7. Web 实时图表能自动刷新。

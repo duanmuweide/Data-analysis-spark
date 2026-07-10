@@ -1,0 +1,37 @@
+# IDE
+.idea/
+*.iml
+
+# SBT
+target/
+project/target/
+project/project/
+
+# Spark
+metastore_db/
+spark-warehouse/
+derby.log
+
+# Data files (大型数据文件不上传Git)
+data/**/*.csv
+data/**/*.json
+data/**/*.parquet
+!data/**/*.sample
+
+# Logs
+logs/
+*.log
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.jar
+*.war
+out/
